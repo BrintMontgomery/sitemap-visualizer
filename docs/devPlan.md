@@ -4,8 +4,8 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 12 — complete; Phase 13 is next; Phases 1–12 are complete.
-* **Last green commit:** Phase 12 outcome and coverage reporting; all 107 unit/integration/smoke tests and four Chromium file:// browser checks pass. See `docs/outcome-reporting.md` for outcomes, redaction and evidence.
+* **Current phase:** Phase 13 — complete; Phase 14 is next; Phases 1–13 are complete.
+* **Last green commit:** Phase 13 PNG and CSV exports; all 115 unit/integration/smoke tests and five Chromium file:// browser checks pass. See `docs/exports.md` for schemas, export safety and evidence.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
@@ -344,7 +344,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 13: PNG and CSV exports
+## [x] Phase 13: PNG and CSV exports
 *Export the analyzed view with evidence and partiality intact. **Risk:** Medium — CSV formulas or omitted warnings can mislead recipients. **Thinking effort:** Medium (simple model). **Depends on:** 6, 8, 12.*
 
 ### 1. Objectives & Scope
@@ -352,13 +352,17 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** completed or partial analyses produce local downloads that distinguish inventory from observed/asserted edges.
 
 ### 2. Implementation Checklist
-- [ ] Capture current graph colors/positions with legend in PNG and handle browser export errors.
-- [ ] Specify pages/links schemas and generate correctly quoted CSV with evidence, null depth, run ID, time, and partiality.
-- [ ] Neutralize formula-leading cells and sanitize filenames; release Blob URLs after download.
-- [ ] Document export fields and add fixtures for quoted values and formula injection.
+- [x] Capture current graph colors/positions with legend in PNG and handle browser export errors.
+- [x] Specify pages/links schemas and generate correctly quoted CSV with evidence, null depth, run ID, time, and partiality.
+- [x] Neutralize formula-leading cells and sanitize filenames; release Blob URLs after download.
+- [x] Document export fields and add fixtures for quoted values and formula injection.
 
 ### 3. Testing & Verification
 * **Checks:** AT-10, AT-15; open CSV in a spreadsheet and inspect PNG from complete/partial runs.
+- [x] All 115 unit/integration/smoke tests pass, including eight export regressions for schemas, provenance, unknown depths, partiality, inventory-only metadata, formula injection, quoted/multiline Unicode, filename safety, SVG state, URL cleanup, browser failure paths and stale exports.
+- [x] Chromium 133.0.6943.0 file:// complete/partial PNG and pages/links CSV downloads pass with zero remote requests; dragged pins/zoom, encoder failure, reset isolation and Blob URL release are verified. All four existing browser checks pass.
+- [x] PNG visually inspected; CSV values independently round-trip through Python's CSV reader. Spreadsheet application UI and Edge/Firefox acceptance remain with Phase 19, as documented in `docs/exports.md`.
+* **Decision:** Native SVG/canvas export captures the current viewport at 1,000px width with a coverage/legend footer. CSV retains graph IDs/evidence and uses empty fields for null depths. Inventory-only links export contains one explicit metadata row and no link data rows. See `docs/exports.md` for schemas, evidence semantics and source-data privacy.
 * **Acceptance:** all exports work offline and carry source/coverage qualifiers.
 * **Commit point:** commit exporters, schema docs, and checks.
 

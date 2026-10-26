@@ -17,6 +17,7 @@
   <script src="js/page-details.js" defer></script>
   <script src="js/app.bundle.js" defer></script>
   <script src="js/outcome-report.js" defer></script>
+  <script src="js/exports.js" defer></script>
   <script src="js/run-controls.js" defer></script>
 </head>
 <body>
@@ -76,6 +77,13 @@
         <p class="layout-status" role="status" aria-live="polite"></p>
       </div>
 
+      <div class="graph-toolbar" role="group" aria-label="Export analysis">
+        <button id="export-png" type="button" disabled>Download PNG</button>
+        <button id="export-pages" type="button" disabled>Download pages CSV</button>
+        <button id="export-links" type="button" disabled>Download links CSV</button>
+        <p id="export-status" role="status" aria-live="polite">Complete an analysis to export. Downloads contain included URLs and evidence.</p>
+      </div>
+
       <div id="empty-state" class="empty-state" role="region" aria-labelledby="empty-state-title">
         <svg class="empty-state-icon" viewBox="0 0 80 64" aria-hidden="true" focusable="false">
           <path d="M40 13v14M20 47V35h40v12M40 27H20v8m20-8h20v8" />
@@ -116,7 +124,7 @@
       <p>Open this page directly in your browser. The application shell uses local files and needs no server or network connection to start.</p>
       <div class="info-divider"></div>
       <p class="info-caption">Current build</p>
-      <p class="build-note">Import local data, then drag, pin, pan, zoom, and fit the graph. Layout changes stay in this run. XML inventory alone establishes no links. Use the page list to inspect evidence and navigate included links with the keyboard. Live discovery traverses browser-readable HTML and sitemaps within configured limits. Exports are scheduled for a later phase.</p>
+      <p class="build-note">Import local data, then drag, pin, pan, zoom, and fit the graph. Layout changes stay in this run. XML inventory alone establishes no links. Use the page list to inspect evidence and navigate included links with the keyboard. Live discovery traverses browser-readable HTML and sitemaps within configured limits. Download the current view as PNG, or pages and evidence-backed links as CSV. Each export carries coverage qualifiers.</p>
     </aside>
   </main>
 

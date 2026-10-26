@@ -4,13 +4,35 @@
   if (!form) return;
   var current = null, sequence = 0, renderer = null, details = null;
   var status = document.getElementById("run-status"), summary = document.getElementById("run-summary");
+  var exportVersion = 0, exportBusy = false;
+  function syncExports() {
+    ["png", "pages", "links"].forEach(function (kind) {
+      document.getElementById("export-" + kind).disabled = exportBusy || typeof SitemapExports === "undefined" || !SitemapExports.available(form.graph, form.report);
+    });
+  }
+  ["png", "pages", "links"].forEach(function (kind) {
+    document.getElementById("export-" + kind).onclick = async function () {
+      if (exportBusy || !SitemapExports.available(form.graph, form.report)) return;
+      var version = exportVersion, graph = form.graph, data = form.report, output = document.getElementById("export-status");
+      exportBusy = true; syncExports(); output.textContent = "Preparing " + kind + " download…";
+      try {
+        var blob = kind === "png" ? await SitemapExports.png(document.getElementById("graph-canvas"), graph, data) : new Blob([SitemapExports.csv(kind, graph, data)], { type: "text/csv;charset=utf-8" });
+        if (version !== exportVersion) return;
+        SitemapExports.download(blob, SitemapExports.filename(kind, data.runId), document);
+        output.textContent = "Download prepared. Coverage qualifiers are included; URLs and supplied evidence may contain sensitive data.";
+      } catch (_) { if (version === exportVersion) output.textContent = "Export failed. Retry or choose a CSV download. The analysis remains available."; }
+      finally { if (version === exportVersion) { exportBusy = false; syncExports(); } }
+    };
+  });
   function clearGraph() {
+    exportVersion++; exportBusy = false;
+    document.getElementById("export-status").textContent = "Complete an analysis to export. Downloads contain included URLs and evidence.";
     if (details) details.destroy(); details = null;
     if (renderer) renderer.destroy(); renderer = null;
     document.getElementById("discovery-log").hidden = true;
     document.querySelector("#discovery-log ol").textContent = "";
     document.getElementById("outcome-report").hidden = true; form.report = null;
-    form.graph = null; form.layoutState = null; form.attempt = null; form.discovery = null;
+    form.graph = null; syncExports(); form.layoutState = null; form.attempt = null; form.discovery = null;
     document.getElementById("empty-state").hidden = false;
     document.getElementById("graph-count").textContent = "Awaiting input";
   }
@@ -33,7 +55,7 @@
   }
   function report(active, result, graph, state, issue) {
     var data = SitemapOutcomes.create({ id: active.id, run: active.run, mode: active.mode, input: active.input, startedAt: active.startedAt, durationMs: Date.now() - active.started, requestTimeoutMs: active.timeout, result: result, graph: graph, state: state, issue: issue, progress: form.discovery && (form.discovery.progress || form.discovery), unsupported: active.unsupported });
-    form.report = data;
+    form.report = data; syncExports();
     summary.textContent = "Run " + data.runId + " | " + data.mode + " | " + data.input + " | Root: " + (data.root || "unknown") + " | " + data.startedAt + " | Limits: " + data.limits.pages + " pages, depth " + data.limits.depth + ", " + data.limits.durationMs + " ms | Duration: " + data.durationMs + " ms | Included: " + data.counts.pages + " pages, " + data.counts.links + " links | Exclusions: " + data.counts.exclusions + " | Truncated: " + data.truncated + " | " + data.coverage;
     document.getElementById("outcome-report").hidden = false;
     document.getElementById("outcome-guidance").textContent = data.guidance;
