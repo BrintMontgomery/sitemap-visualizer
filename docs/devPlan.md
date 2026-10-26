@@ -4,8 +4,8 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 3 — not started; Phases 1–2 are complete.
-* **Last green commit:** Phase 2 contract and URL-policy checks pass; the interactive visualizer remains unimplemented.
+* **Current phase:** Phase 4 — not started; Phases 1–3 are complete.
+* **Last green commit:** Phase 3 CSV adapter and contract checks pass; the interactive visualizer remains unimplemented.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
@@ -121,7 +121,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 3: CSV link import
+## [x] Phase 3: CSV link import
 *Make local directed-link data usable without network. **Risk:** Low — malformed rows or quoted delimiters may generate false edges. **Thinking effort:** Low-Medium (simple model). **Depends on:** 2.*
 
 ### 1. Objectives & Scope
@@ -129,12 +129,12 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** a bounded source/target CSV yields link claims and row-specific errors without uploading files.
 
 ### 2. Implementation Checklist
-- [ ] Read a selected local file with size and row caps; validate required source/target columns and quoted/delimited data.
-- [ ] Normalize endpoints and tag each claim `imported-link` with filename/row evidence; do not claim independent verification.
-- [ ] Add small four-page, duplicate, malformed, formula-like, and 30-page fixtures.
+- [x] Read a selected local file with size and row caps; validate required source/target columns and quoted/delimited data.
+- [x] Normalize endpoints and tag each claim `imported-link` with filename/row evidence; do not claim independent verification.
+- [x] Add small four-page, duplicate, malformed, formula-like, and 30-page fixtures.
 
 ### 3. Testing & Verification
-* **Checks:** AT-03–06 and AT-21 at record level; no network requests.
+* **Checks:** AT-03–06 and AT-21 at record level; no network requests. Graph depth and page-cap acceptance remain in Phase 6. `npm test` passes CSV parsing, provenance, limits, and regression checks.
 * **Acceptance:** valid rows survive once, invalid rows report actionable location, caps report partiality.
 * **Commit point:** commit CSV adapter and fixtures.
 

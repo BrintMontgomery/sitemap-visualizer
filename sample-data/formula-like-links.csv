@@ -1,0 +1,3 @@
+source,target
+"=HYPERLINK(""https://example.test/"")",https://example.test/about
+https://example.test/,https://example.test/?q=%3Dformula

@@ -1,0 +1,4 @@
+source,target
+https://example.test/,javascript:alert(1)
+https://example.test/,https://example.test/about,extra
+"https://example.test/"oops,https://example.test/about

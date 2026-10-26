@@ -1,0 +1,3 @@
+source,target
+https://example.test/#a,https://example.test/about#one
+https://EXAMPLE.test:443/,https://example.test/about#two
