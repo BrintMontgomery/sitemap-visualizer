@@ -4,8 +4,8 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 6 — complete; Phase 7 is next; Phases 1–6 are complete.
-* **Last green commit:** Phase 6 graph pipeline and all 39 unit/integration/smoke tests pass; the interactive visualizer remains unimplemented. See `docs/graph.md` for graph semantics and limits.
+* **Current phase:** Phase 7 — complete; Phase 8 is next; Phases 1–7 are complete.
+* **Last green commit:** Phase 7 local input/run controls and all 40 unit/integration/smoke tests pass; the interactive visualizer remains unimplemented. See `docs/graph.md` for graph semantics and limits.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
@@ -206,7 +206,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 7: Run controls and input UI
+## [x] Phase 7: Run controls and input UI
 *Expose modes and a cancellable analysis state. **Risk:** Low — duplicate submissions or stale runs may overwrite current results. **Thinking effort:** Low-Medium (simple model). **Depends on:** 2, 6.*
 
 ### 1. Objectives & Scope
@@ -214,13 +214,13 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** one active run at a time reaches a terminal state and a new run replaces old graph data.
 
 ### 2. Implementation Checklist
-- [ ] Wire accessible labeled inputs and explain which modes establish edges versus inventory.
-- [ ] Validate mode-specific inputs and range limits; disable unsupported optional transports with reasons.
-- [ ] Add run IDs and `AbortController`; ignore late results from superseded runs and show queued/running/complete/partial/failed/cancelled.
-- [ ] Show source, effective limits, timestamp, and current coverage without storing files remotely.
+- [x] Wire accessible labeled inputs and explain which modes establish edges versus inventory.
+- [x] Validate mode-specific inputs and range limits; disable unsupported optional transports with reasons.
+- [x] Add run IDs and `AbortController`; ignore late results from superseded runs and show queued/running/complete/partial/failed/cancelled.
+- [x] Show source, effective limits, timestamp, and current coverage without storing files remotely.
 
 ### 3. Testing & Verification
-* **Checks:** AT-01, AT-02, AT-12, AT-20; duplicate submit, cancellation, and replacement.
+* **Checks:** AT-01, AT-02, AT-12, AT-20 at local-import controller level. `npm test` passes 40 tests, including cancellation, replacement, stale results, validation and reset. Live retrieval and rendering remain later phases.
 * **Acceptance:** statuses end deterministically; invalid input cannot start acquisition.
 * **Commit point:** commit UI controller and tests.
 

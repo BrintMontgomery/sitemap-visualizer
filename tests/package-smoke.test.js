@@ -18,7 +18,7 @@ test("the direct-file entry point uses local stylesheet and deferred classic scr
   const scriptTags = [...html.matchAll(/<script\b[^>]*src=["']([^"']+)["'][^>]*>/gi)];
 
   assert.equal(stylesheetTags.length, 1, "one local stylesheet should be loaded");
-  assert.equal(scriptTags.length, 6, "contracts and graph load before the application script");
+  assert.equal(scriptTags.length, 7, "contracts and graph load before the application script");
   assert.equal(scriptTags[0][1], "js/contracts.js");
   assert.equal(scriptTags[1][1], "js/csv-import.js"
   );

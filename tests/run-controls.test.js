@@ -1,0 +1,26 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const {JSDOM}=require('jsdom');
+const contracts=require('../js/contracts');
+test('controls validate, cancel, replace and ignore stale results',async()=>{
+ const dom=new JSDOM(fs.readFileSync('index.html','utf8'),{runScripts:'outside-only'}), w=dom.window, f=w.document.getElementById('run-form'), status=w.document.getElementById('run-status');
+ let resolve;
+ w.SitemapContracts=contracts;
+ w.SitemapCsvImport={importFile:()=>new Promise(r=>{resolve=r;})};
+ w.SitemapGraph={buildGraph:()=>({nodes:[],edges:[],exclusions:[],issues:[],partial:false})};
+ w.eval(fs.readFileSync('js/run-controls.js','utf8'));
+ const submit=()=>f.onsubmit({preventDefault(){}});
+ await submit();assert.equal(status.dataset.state,'failed');
+ Object.defineProperty(f.elements.inputFile,'files',{value:[{name:'links.csv'}]});
+ const first=submit();assert.equal(status.dataset.state,'running');
+ const finish=resolve;
+ w.document.getElementById('cancel-run').click();assert.equal(status.dataset.state,'cancelled');
+ finish({ok:true});await first;assert.equal(status.dataset.state,'cancelled');
+ const second=submit(), stale=resolve;
+ const third=submit(), latest=resolve;
+ latest({ok:true});await third;assert.equal(status.dataset.state,'complete');
+ stale({ok:false,issue:{message:'stale'}});await second;assert.equal(status.dataset.state,'complete');
+ w.document.getElementById('reset-run').click();assert.equal(f.graph,null);assert.equal(status.dataset.state,'queued');
+ dom.window.close();
+});
