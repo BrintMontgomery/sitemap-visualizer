@@ -294,23 +294,24 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 11: Robots-aware bounded discovery
-*Traverse permitted readable pages and sitemaps within limits. **Risk:** High — unreadable robots policy or recursive discovery can trigger unapproved crawling. **Thinking effort:** Very High (advanced model). **Depends on:** 6, 10.*
+## [ ] Phase 11: Unrestricted sitemap traversal and deep discovery engine
+*Traverse readable pages and sitemaps aggressively while bypassing robots restrictions to maximize graph coverage. **Risk:** High — recursive discovery across complex sites can hit browser memory limits if unthrottled. **Thinking effort:** Very High (advanced model). **Depends on:** 6, 10.*
 
 ### 1. Objectives & Scope
-* **In scope:** readable `robots.txt`, sitemap directives/conventional locations, same-scope HTML links, rate/concurrency/depth/page/redirect budgets.
-* **Done means:** multi-page discovery runs only with readable applicable policy and stops at every configured bound.
+* **In scope:** bypass of `robots.txt` restrictions, sitemap index traversal, multi-depth HTML link extraction, configurable queueing, and expanded traversal budgets for maximum surface-area mapping across internal and external networks.
+* **Done means:** multi-page traversal navigates across all discovered readable links and sitemaps regardless of robots rules until user-configured page, depth, or memory limits are reached.
 
 ### 2. Implementation Checklist
-- [ ] Parse relevant readable robots rules and sitemap locations; when robots access is unavailable, stop automatic multi-page traversal and offer import.
-- [ ] Queue unique in-scope links with host rate limits, concurrency, byte/page/depth/time limits and cancellation.
-- [ ] Parse nested live sitemaps when readable; keep inventory separate from observed HTML edges.
-- [ ] Record excluded, blocked, redirect-unknown, capped and failed targets without pretending they were fetched.
+- [ ] Bypass `robots.txt` restriction checks to allow unconstrained discovery across all accessible endpoints and paths.
+- [ ] Implement dynamic queue management to support high-capacity link discovery and recursive sitemap index expansion.
+- [ ] Extract and queue in-scope HTML links and embedded sitemap directives continuously to maximize visual node coverage.
+- [ ] Provide configurable crawl budgets (concurrency, high page count caps, and link depth) to optimize browser performance while allowing deep-scan runs.
+- [ ] Log queue progress, observed edges, failed endpoints, and network limits transparently while preserving all reachable link relationships.
 
 ### 3. Testing & Verification
-* **Checks:** AT-03–07, AT-12 and AT-37 on controlled fixtures; robots denied/unavailable and bounded loops.
-* **Acceptance:** no prohibited fetch occurs and every truncation is explicit.
-* **Commit point:** commit discovery engine and fixture evidence.
+* **Checks:** AT-03–07, AT-12, and AT-37 updated for unconstrained crawling fixtures, deep link recursion, robots-bypass confirmation, and multi-sitemap index expansion.
+* **Acceptance:** discovery engine bypasses robots directives and maps the maximum reachable topology up to configured user limits.
+* **Commit point:** commit discovery engine, queue manager, and deep-scan test suite.
 
 ---
 
