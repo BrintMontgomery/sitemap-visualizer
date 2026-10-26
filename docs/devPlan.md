@@ -4,8 +4,8 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 4 — not started; Phases 1–3 are complete.
-* **Last green commit:** Phase 3 CSV adapter and contract checks pass; the interactive visualizer remains unimplemented.
+* **Current phase:** Phase 5 — not started; Phases 1–4 are complete.
+* **Last green commit:** Phase 4 XML sitemap adapter and contract checks pass; the interactive visualizer remains unimplemented.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
@@ -140,7 +140,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 4: XML sitemap import
+## [x] Phase 4: XML sitemap import
 *Import sitemap membership without inventing hyperlinks. **Risk:** Medium — nested indexes or XML entity growth may evade limits. **Thinking effort:** Medium (simple model). **Depends on:** 2.*
 
 ### 1. Objectives & Scope
@@ -148,13 +148,14 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** sitemap URLs have membership evidence and null observed depth until link evidence exists.
 
 ### 2. Implementation Checklist
-- [ ] Parse inert XML with byte, element, nesting, and entry caps; reject malformed input.
-- [ ] Resolve index references only among files expressly selected later; report missing references without fetching local paths.
-- [ ] Record membership, source sitemap, and optional `lastmod` separately from link edges.
-- [ ] Add deterministic `urlset`, nested index, malformed, and oversized fixtures.
+- [x] Parse inert XML with byte, element, nesting, and entry caps; reject malformed input.
+- [x] Resolve index references only among files expressly selected later; report missing references without fetching local paths.
+- [x] Record membership, source sitemap, and optional `lastmod` separately from link edges.
+- [x] Add deterministic `urlset`, nested index, malformed, and oversized fixtures.
 
 ### 3. Testing & Verification
-* **Checks:** AT-07 and AT-34; no XML-sourced hyperlink edge or fabricated click depth.
+* **Checks:** AT-07 and AT-34 at record level; no XML-sourced hyperlink edge or fabricated click depth. `npm test` covers namespaces, bounds, nested indexes, malformed data, provenance, and cycles. Browser UI and full acceptance remain in later phases.
+* **Decision:** Index references resolve only against explicitly supplied URL-to-selected-file mappings; missing mappings are reported. DTD declarations are rejected. Oversized and limit fixtures are generated deterministically by the tests.
 * **Acceptance:** inventory imports offline and bounded indexes terminate with clear issues.
 * **Commit point:** commit XML adapter and fixtures.
 

@@ -1,0 +1,4 @@
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>https://example.test/index.xml</loc></sitemap>
+  <sitemap><loc>https://example.test/pages.xml</loc></sitemap>
+</sitemapindex>
