@@ -23,7 +23,10 @@
     var timeout = options.requestTimeoutMs === undefined ? contracts.limits.requestTimeoutMs : options.requestTimeoutMs;
     if (!Number.isInteger(timeout) || timeout < 1 || timeout > contracts.limits.requestTimeoutMs) throw new RangeError("Invalid request timeout.");
     var fetcher = options.fetch || (typeof fetch === "function" ? fetch.bind(globalThis) : null);
-    var started = Date.now(), deadline = started + contracts.limits.maxDurationMs;
+    var concurrency = run.maxConcurrency || contracts.limits.maxConcurrency;
+    var maxRequests = options.maxRequests === undefined ? run.maxPages : options.maxRequests;
+    if (!Number.isInteger(maxRequests) || maxRequests < 1 || maxRequests > contracts.liveLimits.maxRequests) throw new RangeError("Invalid request count budget.");
+    var started = Date.now(), deadline = started + (run.maxDurationMs || contracts.limits.maxDurationMs);
     var queue = [], active = new Set(), nextHost = new Map(), totalBytes = 0, requests = 0, closed = null, wake;
     function failure(code, attempt) {
       attempt.status = "not-readable"; attempt.issues = Object.freeze([code]);
@@ -43,7 +46,7 @@
       clearTimeout(wake);
       if (closed) return;
       if (Date.now() >= deadline) { stop("TIMEOUT"); return; }
-      while (queue.length && active.size < contracts.limits.maxConcurrency) {
+      while (queue.length && active.size < concurrency) {
         let job = queue[0];
         if (totalBytes >= contracts.limits.maxTotalBytes) {
           queue.shift(); job.finish(failure("SIZE_LIMIT", attemptFor(job.url))); continue;
@@ -61,7 +64,7 @@
       }
       if (queue.length || active.size) {
         var delay = deadline - Date.now();
-        if (queue.length && active.size < contracts.limits.maxConcurrency) delay = Math.min(delay, Math.max(1, (nextHost.get(new URL(queue[0].url).hostname.replace(/\.$/, "")) || 0) - Date.now()));
+        if (queue.length && active.size < concurrency) delay = Math.min(delay, Math.max(1, (nextHost.get(new URL(queue[0].url).hostname.replace(/\.$/, "")) || 0) - Date.now()));
         wake = setTimeout(pump, Math.max(1, delay));
       }
     }
@@ -135,7 +138,7 @@
       if (!normalized.ok) return Promise.resolve(failure("URL_REJECTED", attempt));
       if (!contracts.inScope(normalized.url, run.rootUrl)) return Promise.resolve(failure("SCOPE_EXCLUDED", attempt));
       if (closed || Date.now() >= deadline) return Promise.resolve(failure(closed || "TIMEOUT", attempt));
-      if (requests >= run.maxPages) return Promise.resolve(failure("PARTIAL_LIMIT", attempt));
+      if (requests >= maxRequests) return Promise.resolve(failure("PARTIAL_LIMIT", attempt));
       if (totalBytes >= contracts.limits.maxTotalBytes) return Promise.resolve(failure("SIZE_LIMIT", attempt));
       var signal = requestOptions && requestOptions.signal;
       if (signal && signal.aborted) return Promise.resolve(failure("CANCELLED", attempt));

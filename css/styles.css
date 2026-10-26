@@ -353,3 +353,9 @@ a {
 .selection-status { min-height: 2rem; }
 .graph-node:focus-visible { outline: none; }
 .graph-node:focus-visible circle { stroke: #0f172a; stroke-width: 5; }
+
+/* Live discovery controls and long endpoint logs must fit narrow viewports. */
+#run-form { overflow-wrap: anywhere; }
+#run-form label { display: inline-block; max-width: 100%; }
+#run-form input, #run-form select { box-sizing: border-box; max-width: 100%; }
+#discovery-log li { overflow-wrap: anywhere; }

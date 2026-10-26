@@ -25,7 +25,7 @@ test("validate provenance, transport, budgets, and never accept opaque or spoofe
   assert.equal(ok.result.sourceOrigin, "https://example.org");
   for (const override of [{ opaque: true }, { responseType: "opaque" }, { responseType: "opaqueredirect" }, { responseType: "error" }, { transport: "iframe-bridge" }, { evidenceClass: "imported-link" }, { observedFinalUrl: "http://127.0.0.1" }, { observedFinalUrl: "https://other.example/" }, { bytesRead: 1 }, { bytesRead: 2000001 }, { issues: ["made-up"] }, { httpStatus: 404 }]) assert.equal(c.validateResult(run, { ...valid(), ...override }).ok, false, JSON.stringify(override));
   assert.equal(c.validateResult(run, { ...valid(), status: "not-readable" }).ok, false);
-  assert.throws(() => c.createRun({ mode: "live-cors", maxDepth: 5 }), RangeError);
+  assert.throws(() => c.createRun({ mode: "live-cors", maxDepth: 21 }), RangeError);
   assert.throws(() => c.createRun({ mode: "unknown" }), TypeError);
 });
 

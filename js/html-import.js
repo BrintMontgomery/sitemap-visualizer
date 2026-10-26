@@ -61,8 +61,15 @@
       }
     }
     if (truncated) issues.push({ code: "PARTIAL_LIMIT", message: "Anchor limit reached; remaining anchors were not imported." });
+    var sitemaps = [], directives = fragment.querySelectorAll("link[href][rel]");
+    for (var directive of directives) {
+      if (!directive.getAttribute("rel").toLowerCase().split(/\s+/).includes("sitemap")) continue;
+      var sitemap = contracts.normalizeUrl(directive.getAttribute("href"), sourceUrl);
+      if (sitemap.ok && !sitemaps.includes(sitemap.url)) sitemaps.push(sitemap.url);
+      if (sitemaps.length >= contracts.liveLimits.maxSitemaps) break;
+    }
     var titleElement = fragment.querySelector("title"), title = titleElement ? titleElement.textContent.trim() : "";
-    return { ok: true, page: { url: sourceUrl, title: title, evidenceClass: "observed-html", inputReference: inputReference, transport: transport }, claims: claims, issues: issues, truncated: truncated };
+    return { ok: true, page: { url: sourceUrl, title: title, evidenceClass: "observed-html", inputReference: inputReference, transport: transport }, claims: claims, sitemaps: sitemaps, issues: issues, truncated: truncated };
   }
   function fromAcquisition(run, acquisition) {
     if (!contracts.isValidatedResult(acquisition) || !run || run.mode !== "live-cors" || acquisition.result.transport !== "live-cors" || acquisition.result.contentKind !== "html") return failure("UNSUPPORTED_CONTENT", "A validated readable HTML response is required. For sitemap XML, use local import.");

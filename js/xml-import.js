@@ -30,6 +30,35 @@
     return Array.from(node.children).filter(function (child) { return child.localName === name && (child.namespaceURI || "") === namespace; });
   }
   function failure(code, message) { return { ok: false, issue: { code: code, message: message } }; }
+  function parseSitemap(text, inputReference, sourceUrl, remaining) {
+    var error = preflight(text);
+    if (error) return failure(error, "XML is malformed, contains a prohibited declaration, or exceeds structural limits.");
+    var doc = new DOMParser().parseFromString(text, "application/xml"), root = doc.documentElement;
+    if (!root || doc.getElementsByTagName("parsererror").length || !["urlset", "sitemapindex"].includes(root.localName) || !["", ns].includes(root.namespaceURI || "")) return failure("INPUT_MALFORMED", "Expected a well-formed sitemap urlset or sitemapindex.");
+    var namespace = root.namespaceURI || "", isIndex = root.localName === "sitemapindex", entries = children(root, isIndex ? "sitemap" : "url", namespace);
+    var localIssues = [], localMemberships = [], localReferences = [], records = 0, truncated = false;
+    for (var entry of entries) {
+      if (records >= remaining) { truncated = true; localIssues.push({ code: "PARTIAL_LIMIT", inputReference: inputReference, message: "Entry limit reached." }); break; }
+      records++;
+      var locs = children(entry, "loc", namespace), mods = children(entry, "lastmod", namespace);
+      if (locs.length !== 1 || locs[0].children.length || mods.length > 1 || (mods[0] && mods[0].children.length)) { localIssues.push({ code: "INPUT_MALFORMED", inputReference: inputReference, message: "Entry requires one text-only loc and at most one text-only lastmod." }); continue; }
+      var url = contracts.normalizeUrl(locs[0].textContent.trim());
+      if (!url.ok) { localIssues.push({ code: "URL_REJECTED", inputReference: inputReference, message: "Entry contains an invalid HTTP(S) URL." }); continue; }
+      var lastmod = mods.length ? mods[0].textContent.trim() : null;
+      if (isIndex) localReferences.push({ url: url.url, sourceSitemap: sourceUrl, inputReference: inputReference, lastmod: lastmod, resolved: false });
+      else localMemberships.push({ url: url.url, sourceSitemap: sourceUrl, inputReference: inputReference, lastmod: lastmod, evidenceClass: "sitemap-only", depth: null });
+    }
+    return { ok: true, memberships: localMemberships, references: localReferences, issues: localIssues, records: records, truncated: truncated };
+  }
+  function fromAcquisition(run, acquisition) {
+    if (!contracts.isValidatedResult(acquisition) || !run || run.mode !== "live-cors" || acquisition.result.transport !== "live-cors" || acquisition.result.contentKind !== "xml") return failure("UNSUPPORTED_CONTENT", "A validated readable sitemap XML response is required.");
+    var r = acquisition.result, parsed = parseSitemap(r.payload, r.inputReference, r.observedFinalUrl, contracts.limits.maxRecords);
+    if (!parsed.ok) return parsed;
+    parsed.memberships.forEach(function (m) { m.transport = "live-cors"; });
+    parsed.references.forEach(function (ref) { delete ref.resolved; });
+    var checked = contracts.validateResult(run, Object.assign({}, r, { status: parsed.issues.length ? "partial" : r.status, issues: Array.from(new Set(r.issues.concat(parsed.issues.map(function (i) { return i.code; })))) }));
+    return checked.ok ? Object.assign(parsed, { acquisition: checked }) : checked;
+  }
   // Each selected file may be explicitly mapped to its absolute sitemap URL.
   // The first selected file is the entry point; only reachable mapped files are read.
   async function importFiles(selected, run) {
@@ -62,23 +91,11 @@
       var bytes = Math.max(item.file.size, new TextEncoder().encode(text).length);
       if (bytes > contracts.limits.maxBytes || total + bytes > contracts.limits.maxTotalBytes) { truncated = true; issue("SIZE_LIMIT", item.file.name, "File or total byte limit exceeded."); continue; }
       total += bytes;
-      var error = preflight(text);
-      if (error) { if (error === "PARTIAL_LIMIT") truncated = true; issue(error, item.file.name, "XML is malformed, contains a prohibited declaration, or exceeds structural limits."); continue; }
-      var doc = new DOMParser().parseFromString(text, "application/xml"), root = doc.documentElement;
-      if (!root || doc.getElementsByTagName("parsererror").length || !["urlset", "sitemapindex"].includes(root.localName) || !["", ns].includes(root.namespaceURI || "")) { issue("INPUT_MALFORMED", item.file.name, "Expected a well-formed sitemap urlset or sitemapindex."); continue; }
-      var namespace = root.namespaceURI || "", isIndex = root.localName === "sitemapindex", entries = children(root, isIndex ? "sitemap" : "url", namespace);
-      var localIssues = [], localMemberships = [], localReferences = [];
-      for (var entry of entries) {
-        if (records >= contracts.limits.maxRecords) { truncated = true; localIssues.push({ code: "PARTIAL_LIMIT", inputReference: item.file.name, message: "Entry limit reached." }); break; }
-        records++;
-        var locs = children(entry, "loc", namespace), mods = children(entry, "lastmod", namespace);
-        if (locs.length !== 1 || locs[0].children.length || mods.length > 1 || (mods[0] && mods[0].children.length)) { localIssues.push({ code: "INPUT_MALFORMED", inputReference: item.file.name, message: "Entry requires one text-only loc and at most one text-only lastmod." }); continue; }
-        var url = contracts.normalizeUrl(locs[0].textContent.trim());
-        if (!url.ok) { localIssues.push({ code: "URL_REJECTED", inputReference: item.file.name, message: "Entry contains an invalid HTTP(S) URL." }); continue; }
-        var lastmod = mods.length ? mods[0].textContent.trim() : null;
-        if (isIndex) localReferences.push({ url: url.url, sourceSitemap: item.sourceUrl, inputReference: item.file.name, lastmod: lastmod, resolved: map.has(url.url) });
-        else localMemberships.push({ url: url.url, sourceSitemap: item.sourceUrl, inputReference: item.file.name, lastmod: lastmod, evidenceClass: "sitemap-only", depth: null });
-      }
+      var parsed = parseSitemap(text, item.file.name, item.sourceUrl, contracts.limits.maxRecords - records);
+      if (!parsed.ok) { if (parsed.issue.code === "PARTIAL_LIMIT") truncated = true; issue(parsed.issue.code, item.file.name, parsed.issue.message); continue; }
+      records += parsed.records; truncated = truncated || parsed.truncated;
+      var localIssues = parsed.issues, localMemberships = parsed.memberships, localReferences = parsed.references;
+      localReferences.forEach(function (ref) { ref.resolved = map.has(ref.url); });
       var validated = contracts.validateResult(run, { transport: "xml-import", status: localIssues.length ? "partial" : "user-supplied", contentKind: "xml", evidenceClass: "sitemap-only", payload: text, bytesRead: bytes, inputReference: item.file.name, startedAt: new Date(started).toISOString(), elapsedMs: Date.now() - started, issues: Array.from(new Set(localIssues.map(function (x) { return x.code; }))) });
       if (!validated.ok) { issues.push(Object.assign({ inputReference: item.file.name }, validated.issue)); continue; }
       acquisitions.push(validated); memberships.push.apply(memberships, localMemberships); issues.push.apply(issues, localIssues);
@@ -88,5 +105,5 @@
     if (!acquisitions.length) return { ok: false, issue: issues[0] || { code: "INPUT_MALFORMED", message: "No valid sitemap supplied." }, issues: issues, truncated: truncated };
     return { ok: true, acquisitions: acquisitions, memberships: memberships, references: references, issues: issues, truncated: truncated, status: issues.length ? "partial" : "user-supplied" };
   }
-  return Object.freeze({ importFiles: importFiles });
+  return Object.freeze({ importFiles: importFiles, fromAcquisition: fromAcquisition });
 });

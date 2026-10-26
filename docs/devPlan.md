@@ -4,8 +4,8 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 10 — complete; Phase 11 is next; Phases 1–10 are complete.
-* **Last green commit:** Phase 10 bounded internal-network/CORS fetch adapter; all 69 unit/integration/smoke tests and four Chromium file:// browser checks pass. See `docs/fetch-adapter.md` for scope, policy revision and evidence.
+* **Current phase:** Phase 11 — complete; Phase 12 is next; Phases 1–11 are complete.
+* **Last green commit:** Phase 11 bounded deep HTML/sitemap discovery; all 94 unit/integration/smoke tests and four Chromium file:// browser checks pass. See `docs/discovery.md` for budgets, robots-policy revision and evidence.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
@@ -42,7 +42,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 | 8 | Graph rendering and layout | 6–7 | High / advanced model | White-canvas interactive graph and legend |
 | 9 | Details and accessible list | 6–8 | Medium / simple model | Keyboard inspection and link details |
 | 10 | CORS-readable fetch adapter | 2, 7 | High / advanced model | Bounded readable URL acquisition |
-| 11 | Robots-aware discovery | 6, 10 | Very High / advanced model | Bounded allowed HTML/sitemap traversal |
+| 11 | Deep HTML/sitemap discovery | 6, 10 | Very High / advanced model | Bounded traversal with robots restrictions ignored |
 | 12 | Outcome and coverage reporting | 7, 10–11 | Medium / simple model | Terminal and partial states with guidance |
 | 13 | PNG and CSV exports | 6, 8, 12 | Medium / simple model | Provenance-aware local downloads |
 | 14 | Metrics and orphan candidates | 6, 12 | Medium / simple model | Qualified components and candidates |
@@ -297,7 +297,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 11: Unrestricted sitemap traversal and deep discovery engine
+## [x] Phase 11: Unrestricted sitemap traversal and deep discovery engine
 *Traverse readable pages and sitemaps aggressively while bypassing robots restrictions to maximize graph coverage. **Risk:** High — recursive discovery across complex sites can hit browser memory limits if unthrottled. **Thinking effort:** Very High (advanced model). **Depends on:** 6, 10.*
 
 ### 1. Objectives & Scope
@@ -305,14 +305,17 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** multi-page traversal navigates across all discovered readable links and sitemaps regardless of robots rules until user-configured page, depth, or memory limits are reached.
 
 ### 2. Implementation Checklist
-- [ ] Bypass `robots.txt` restriction checks to allow unconstrained discovery across all accessible endpoints and paths.
-- [ ] Implement dynamic queue management to support high-capacity link discovery and recursive sitemap index expansion.
-- [ ] Extract and queue in-scope HTML links and embedded sitemap directives continuously to maximize visual node coverage.
-- [ ] Provide configurable crawl budgets (concurrency, high page count caps, and link depth) to optimize browser performance while allowing deep-scan runs.
-- [ ] Log queue progress, observed edges, failed endpoints, and network limits transparently while preserving all reachable link relationships.
+- [x] Bypass `robots.txt` restriction checks to allow unconstrained discovery across all accessible endpoints and paths.
+- [x] Implement dynamic queue management to support high-capacity link discovery and recursive sitemap index expansion.
+- [x] Extract and queue in-scope HTML links and embedded sitemap directives continuously to maximize visual node coverage.
+- [x] Provide configurable crawl budgets (concurrency, high page count caps, and link depth) to optimize browser performance while allowing deep-scan runs.
+- [x] Log queue progress, observed edges, failed endpoints, and network limits transparently while preserving all reachable link relationships.
 
 ### 3. Testing & Verification
 * **Checks:** AT-03–07, AT-12, and AT-37 updated for unconstrained crawling fixtures, deep link recursion, robots-bypass confirmation, and multi-sitemap index expansion.
+- [x] All 94 unit/integration/smoke tests pass, including 25 new discovery/control regressions covering cycles, shortest paths, scope, provenance, nested XML, caps, failures, concurrency/rate, cancellation, replacement, safe diagnostics and a 260-page crawl.
+- [x] Chromium file:// live discovery, CORS-denied branches, recursive sitemap cycles, robots ignored, depth caps and the request log pass; all three existing offline/graph/keyboard browser regressions also pass.
+* **Decision:** `SitemapDiscovery.discover` owns bounded breadth-first HTML waves and recursive sitemap/inventory queues over one fetch session. Live limits now allow 1,000 pages, depth 20, concurrency 1–8 and up to 300 seconds; fixed byte/record/rate bounds still apply. Robots restrictions are ignored as requested by the revised phase, superseding FR-007/012 and NFR-003 policy portions. Sitemap seeds use direct XML, conventional `/sitemap.xml` and HTML sitemap directives rather than robots `Sitemap:` lines (FR-008 deviation). Browser access and exact-host scope remain binding. See `docs/discovery.md` for interfaces, limits, provenance, deviations and verification.
 * **Acceptance:** discovery engine bypasses robots directives and maps the maximum reachable topology up to configured user limits.
 * **Commit point:** commit discovery engine, queue manager, and deep-scan test suite.
 

@@ -6,7 +6,7 @@ A browser-only sitemap visualizer, developed in small, testable phases.
 
 Open `index.html` directly in Chrome, Edge, or Firefox. Import a local links CSV, sitemap XML, or saved HTML file, then explore the graph on its white canvas. It requires no local server, application backend, installation, account, or network connection at startup.
 
-Set a known root URL for depth colors. Drag nodes to pin them; drag the canvas to pan; use zoom, fit, unpin, and reset controls. See `docs/graph-rendering.md` for controls, evidence semantics, fixtures, and browser checks. Use Live page to retrieve one browser-readable HTML page, including an intranet or loopback URL, with a configurable timeout. CORS and browser network permissions still apply. Automatic traversal and exports remain later phases. See `docs/fetch-adapter.md` for acquisition limits, metadata and browser evidence.
+Set a known root URL for depth colors. Drag nodes to pin them; drag the canvas to pan; use zoom, fit, unpin, and reset controls. See `docs/graph-rendering.md` for controls, evidence semantics, fixtures, and browser checks. Use Live discovery to traverse browser-readable HTML links and sitemap indexes, including on an intranet or loopback host. Set pages (up to 1,000), depth (up to 20), concurrency, request timeout and run duration. Robots restrictions are ignored; CORS and browser network permissions still apply. Byte, record and time limits can stop a run before its page ceiling. See `docs/discovery.md` for scheduling, provenance, budgets and browser evidence. Exports remain a later phase.
 
 ## Development checks
 

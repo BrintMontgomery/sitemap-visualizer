@@ -7,7 +7,9 @@
   function clearGraph() {
     if (details) details.destroy(); details = null;
     if (renderer) renderer.destroy(); renderer = null;
-    form.graph = null; form.layoutState = null; form.attempt = null;
+    document.getElementById("discovery-log").hidden = true;
+    document.querySelector("#discovery-log ol").textContent = "";
+    form.graph = null; form.layoutState = null; form.attempt = null; form.discovery = null;
     document.getElementById("empty-state").hidden = false;
     document.getElementById("graph-count").textContent = "Awaiting input";
   }
@@ -19,14 +21,28 @@
     }
     document.getElementById("graph-count").textContent = graph.nodes.length + " pages · " + graph.edges.length + " links";
   }
+  function showDiscovery(result) {
+    var log = document.getElementById("discovery-log"), list = log.querySelector("ol");
+    log.hidden = false; list.textContent = "";
+    (result.attempts || []).forEach(function (attempt) {
+      var item = document.createElement("li");
+      item.textContent = attempt.resourceUrl + " | " + (attempt.httpStatus === null ? "HTTP status unknown" : "HTTP " + attempt.httpStatus) + " | Final: " + (attempt.observedFinalUrl || "unknown") + " | " + attempt.bytesRead + " bytes | " + attempt.elapsedMs + " ms | " + (attempt.issues.join(", ") || "readable");
+      list.appendChild(item);
+    });
+  }
   function setState(state, message) { status.dataset.state = state; status.textContent = state + (message ? ": " + message : ""); }
   function stop() { if (current) { current.controller.abort(); if (current.session) current.session.close(); } current = null; }
   function syncMode() {
     var live = form.elements.mode.value === "live-cors";
     form.elements.inputFile.required = !live; form.elements.inputFile.disabled = live;
     form.elements.rootUrl.required = live || form.elements.mode.value === "html-import";
-    form.elements.requestTimeoutMs.disabled = !live;
-    form.querySelector("[data-live-option]").hidden = !live;
+    ["requestTimeoutMs", "maxConcurrency", "runDurationSeconds"].forEach(function (name) { form.elements[name].disabled = !live; });
+    form.querySelectorAll("[data-live-option]").forEach(function (element) { element.hidden = !live; });
+    ["maxPages", "maxDepth"].forEach(function (name) {
+      var ceiling = (live ? SitemapContracts.liveLimits : SitemapContracts.limits)[name];
+      form.elements[name].max = String(ceiling);
+      if (Number(form.elements[name].value) > ceiling) form.elements[name].value = String(ceiling);
+    });
   }
   form.elements.mode.onchange = syncMode; syncMode();
   document.getElementById("cancel-run").onclick = function () { if (current) { stop(); setState("cancelled"); } };
@@ -41,31 +57,34 @@
       if (["html-import", "live-cors"].includes(mode) && !root) throw Error("Live retrieval and HTML require a declared source URL.");
       var timeout = Number(form.elements.requestTimeoutMs.value);
       if (mode === "live-cors" && (!Number.isInteger(timeout) || timeout < 1 || timeout > SitemapContracts.limits.requestTimeoutMs)) throw Error("Request timeout must be between 1 and 10000 milliseconds.");
-      run = SitemapContracts.createRun({ mode: mode, rootUrl: root || null, maxPages: Number(form.elements.maxPages.value), maxDepth: Number(form.elements.maxDepth.value) });
+      run = SitemapContracts.createRun({ mode: mode, rootUrl: root || null, maxPages: Number(form.elements.maxPages.value), maxDepth: Number(form.elements.maxDepth.value), maxConcurrency: mode === "live-cors" ? Number(form.elements.maxConcurrency.value) : undefined, maxDurationMs: mode === "live-cors" ? Number(form.elements.runDurationSeconds.value) * 1000 : undefined });
     } catch (error) { setState("failed", error.message); return; }
     stop(); clearGraph(); summary.textContent = "";
     var active = { id: ++sequence, controller: new AbortController() }; current = active;
     setState("queued");
     try {
-      setState("running", mode === "live-cors" ? "Requesting selected page." : "Reading local input.");
+      setState("running", mode === "live-cors" ? "Discovering readable pages and sitemaps." : "Reading local input.");
       var pending;
       if (mode === "live-cors") {
-        active.session = SitemapFetch.createSession(run, { requestTimeoutMs: timeout });
-        pending = active.session.request(run.rootUrl, { signal: active.controller.signal });
+        pending = SitemapDiscovery.discover(run, { requestTimeoutMs: timeout, signal: active.controller.signal, onProgress: function (progress) {
+          if (current !== active || active.controller.signal.aborted) return;
+          form.discovery = progress;
+          setState("running", progress.requested + " responses; " + progress.queued + " queued; " + progress.active + " active; " + progress.observedEdges + " observed links; " + progress.failed + " failed; " + progress.bytesRead + " bytes.");
+        } });
       } else pending = mode === "csv-import" ? SitemapCsvImport.importFile(file, run) : mode === "xml-import" ? SitemapXmlImport.importFiles([{ file: file }], run) : SitemapHtmlImport.importFile(file, run, root);
       var timer;
       var result;
-      try { result = await Promise.race([pending, new Promise(function (_, reject) { timer = setTimeout(function () { reject(Error(mode === "live-cors" ? "Run time limit reached." : "Import time limit reached.")); }, SitemapContracts.limits.maxDurationMs); })]); }
+      try { result = mode === "live-cors" ? await pending : await Promise.race([pending, new Promise(function (_, reject) { timer = setTimeout(function () { reject(Error(mode === "live-cors" ? "Run time limit reached." : "Import time limit reached.")); }, run.maxDurationMs); })]); }
       finally { clearTimeout(timer); }
       if (current !== active || active.controller.signal.aborted) return;
       if (mode === "live-cors") {
         form.attempt = result.attempt;
-        if (result.ok) result = SitemapHtmlImport.fromAcquisition(run, result.acquisition);
+        form.discovery = result; showDiscovery(result);
       }
       if (!result.ok) throw Error(result.issue.code + ": " + result.issue.message);
-      var graph = SitemapGraph.buildGraph(run, [result]); form.graph = graph;
+      var graph = SitemapGraph.buildGraph(run, mode === "live-cors" ? result.batches : [result]); form.graph = graph;
       showGraph(graph, active.id);
-      summary.textContent = "Run " + active.id + " | " + mode + " | " + (mode === "live-cors" ? run.rootUrl : file.name) + " | Root: " + (run.rootUrl || "unknown") + " | " + run.startedAt + " | Limits: " + run.maxPages + " pages, depth " + run.maxDepth + " | Included: " + graph.nodes.length + " pages, " + graph.edges.length + " links | Exclusions: " + graph.exclusions.length + " | Coverage: " + (graph.partial ? "partial" : mode === "live-cors" ? "selected page only; link targets not fetched" : "user-supplied records only") + " | " + graph.issues.map(function (i) { return i.message; }).join("; ");
+      summary.textContent = "Run " + active.id + " | " + mode + " | " + (mode === "live-cors" ? run.rootUrl : file.name) + " | Root: " + (run.rootUrl || "unknown") + " | " + run.startedAt + " | Limits: " + run.maxPages + " pages, depth " + run.maxDepth + (mode === "live-cors" ? ", concurrency " + run.maxConcurrency + ", " + run.maxDurationMs / 1000 + " seconds; 10 MB total and 10,000 records" : "") + " | Included: " + graph.nodes.length + " pages, " + graph.edges.length + " links | Exclusions: " + graph.exclusions.length + " | Coverage: " + (graph.partial ? "partial" : mode === "live-cors" ? "bounded readable discovery; robots restrictions ignored" : "user-supplied records only") + " | " + graph.issues.map(function (i) { return i.message; }).join("; ");
       setState(graph.partial ? "partial" : "complete"); current = null;
     } catch (error) { if (current === active) { current = null; setState("failed", error.message); } }
     finally { if (active.session) active.session.close(); }

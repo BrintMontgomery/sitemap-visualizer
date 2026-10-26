@@ -7,7 +7,7 @@
   "use strict";
 
   var modes = Object.freeze({
-    "live-cors": "Bounded single-page retrieval; automatic discovery is not implemented yet.",
+    "live-cors": "Bounded HTML and sitemap discovery within the selected host.",
     "iframe-bridge": "No compatible bridge is configured.",
     "jsonp-provider": "No approved provider is configured.",
     "xml-import": "XML import is not implemented yet.",
@@ -19,6 +19,7 @@
   var evidenceClasses = Object.freeze(["observed-html", "imported-link", "sitemap-only", "bridge-reported", "jsonp-reported"]);
   var issueCodes = Object.freeze(["NETWORK_OR_POLICY_FAILURE", "TIMEOUT", "CANCELLED", "HTTP_ERROR", "OPAQUE_RESPONSE", "UNSUPPORTED_CONTENT", "SIZE_LIMIT", "ROBOTS_UNAVAILABLE", "ROBOTS_EXCLUDED", "BRIDGE_UNAVAILABLE", "BRIDGE_TIMEOUT", "BRIDGE_MESSAGE_REJECTED", "JSONP_DISABLED", "JSONP_SCRIPT_ERROR", "JSONP_TIMEOUT", "INPUT_MALFORMED", "PARTIAL_LIMIT", "URL_REJECTED", "SCOPE_EXCLUDED"]);
   var limits = Object.freeze({ maxBytes: 2000000, maxTotalBytes: 10000000, maxPages: 250, maxDepth: 4, maxDurationMs: 30000, requestTimeoutMs: 10000, maxConcurrency: 2, minHostIntervalMs: 1000, maxRedirects: 5, maxRecords: 10000, maxElements: 20000, maxNesting: 64 });
+  var liveLimits = Object.freeze({ maxPages: 1000, maxDepth: 20, maxConcurrency: 8, maxDurationMs: 300000, maxSitemaps: 128, maxRequests: 1128 });
   var defaults = Object.freeze({ maxPages: 50, maxDepth: 2 });
 
   function rejected(message) { return { ok: false, issue: { code: "URL_REJECTED", message: message } }; }
@@ -45,10 +46,14 @@
     if (!options || !Object.hasOwn(modes, options.mode)) throw new TypeError("Unknown acquisition mode");
     var pages = options.maxPages === undefined ? defaults.maxPages : options.maxPages;
     var depth = options.maxDepth === undefined ? defaults.maxDepth : options.maxDepth;
-    if (!Number.isInteger(pages) || pages < 1 || pages > limits.maxPages || !Number.isInteger(depth) || depth < 0 || depth > limits.maxDepth) throw new RangeError("Invalid run limits");
+    var ceiling = options.mode === "live-cors" ? liveLimits : limits;
+    if (!Number.isInteger(pages) || pages < 1 || pages > ceiling.maxPages || !Number.isInteger(depth) || depth < 0 || depth > ceiling.maxDepth) throw new RangeError("Invalid run limits");
+    var concurrency = options.maxConcurrency === undefined ? limits.maxConcurrency : options.maxConcurrency;
+    var duration = options.maxDurationMs === undefined ? limits.maxDurationMs : options.maxDurationMs;
+    if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > ceiling.maxConcurrency || !Number.isInteger(duration) || duration < 1 || duration > ceiling.maxDurationMs) throw new RangeError("Invalid crawl budgets");
     var rootUrl = null;
     if (options.rootUrl != null) { var result = normalizeUrl(options.rootUrl); if (!result.ok) throw new TypeError(result.issue.message); rootUrl = result.url; }
-    return Object.freeze({ mode: options.mode, rootUrl: rootUrl, maxPages: pages, maxDepth: depth, startedAt: new Date().toISOString(), status: "queued", truncated: false });
+    return Object.freeze({ mode: options.mode, rootUrl: rootUrl, maxPages: pages, maxDepth: depth, maxConcurrency: concurrency, maxDurationMs: duration, startedAt: new Date().toISOString(), status: "queued", truncated: false });
   }
   var validated = new WeakMap();
   function createBudget(run) {
@@ -76,7 +81,7 @@
     var actualBytes = new TextEncoder().encode(value.payload).length;
     if (!Number.isSafeInteger(value.bytesRead) || value.bytesRead < actualBytes || value.bytesRead > limits.maxBytes || actualBytes > limits.maxBytes) return fail("SIZE_LIMIT", "Content exceeds the byte budget or has an invalid byte count.");
     if (!Array.isArray(value.issues) || value.issues.some(function (i) { return typeof i !== "string" || !issueCodes.includes(i); })) return fail("INPUT_MALFORMED", "Invalid issue codes.");
-    if (typeof value.inputReference !== "string" || !value.inputReference || typeof value.startedAt !== "string" || !Number.isFinite(Date.parse(value.startedAt)) || !Number.isFinite(value.elapsedMs) || value.elapsedMs < 0 || value.elapsedMs > limits.maxDurationMs) return fail("INPUT_MALFORMED", "Invalid provenance or timing.");
+    if (typeof value.inputReference !== "string" || !value.inputReference || typeof value.startedAt !== "string" || !Number.isFinite(Date.parse(value.startedAt)) || !Number.isFinite(value.elapsedMs) || value.elapsedMs < 0 || value.elapsedMs > (run.maxDurationMs || limits.maxDurationMs)) return fail("INPUT_MALFORMED", "Invalid provenance or timing.");
     var requested = null, finalUrl = null;
     if (run.mode === "live-cors") {
       requested = normalizeUrl(value.resourceUrl); finalUrl = normalizeUrl(value.observedFinalUrl);
@@ -87,5 +92,5 @@
     Object.freeze(accepted); validated.set(accepted, run); return accepted;
   }
   function isValidatedResult(value) { return !!value && validated.has(value); }
-  return Object.freeze({ modes: modes, statuses: statuses, evidenceClasses: evidenceClasses, issueCodes: issueCodes, limits: limits, defaults: defaults, normalizeUrl: normalizeUrl, inScope: inScope, uniqueUrls: uniqueUrls, createRun: createRun, createBudget: createBudget, validateResult: validateResult, isValidatedResult: isValidatedResult });
+  return Object.freeze({ modes: modes, statuses: statuses, evidenceClasses: evidenceClasses, issueCodes: issueCodes, limits: limits, liveLimits: liveLimits, defaults: defaults, normalizeUrl: normalizeUrl, inScope: inScope, uniqueUrls: uniqueUrls, createRun: createRun, createBudget: createBudget, validateResult: validateResult, isValidatedResult: isValidatedResult });
 });
