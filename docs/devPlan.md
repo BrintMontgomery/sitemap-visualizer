@@ -4,8 +4,8 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 8 — complete; Phase 9 is next; Phases 1–8 are complete.
-* **Last green commit:** Phase 8 native SVG rendering and layout; all 46 unit/integration/smoke tests and the Chromium file:// interaction check pass. See `docs/graph-rendering.md` for evidence and remaining release boundaries.
+* **Current phase:** Phase 9 — complete; Phase 10 is next; Phases 1–9 are complete.
+* **Last green commit:** Phase 9 details and accessible page table; all 54 unit/integration/smoke tests and both Chromium file:// interaction checks pass. See `docs/page-inspection.md` for evidence and the focused accessibility review.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
@@ -250,7 +250,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 9: Details and accessible list
+## [x] Phase 9: Details and accessible list
 *Make graph evidence inspectable without a mouse. **Risk:** Medium — visual selection can exclude keyboard users. **Thinking effort:** Medium (simple model). **Depends on:** 6–8.*
 
 ### 1. Objectives & Scope
@@ -258,13 +258,16 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** a keyboard user can select every page and read the same evidence and counts shown on the graph.
 
 ### 2. Implementation Checklist
-- [ ] Add a structured page list with focus and selection synchronized to the graph.
-- [ ] Render URL, available title/status, depth or unknown, evidence source, inbound/outbound counts and included links as text.
-- [ ] Provide safe external-page navigation, clear focus indicators, accessible labels and live status messages.
-- [ ] Add keyboard checks and a focused WCAG 2.2 AA review of these controls.
+- [x] Add a structured page list with focus and selection synchronized to the graph.
+- [x] Render URL, available title/status, depth or unknown, evidence source, inbound/outbound counts and included links as text.
+- [x] Provide safe external-page navigation, clear focus indicators, accessible labels and live status messages.
+- [x] Add keyboard checks and a focused WCAG 2.2 AA review of these controls.
 
 ### 3. Testing & Verification
-* **Checks:** AT-08 and AT-14; keyboard-only inspect/select/navigation and screen-reader labels.
+* **Checks:** Phase 9 portions of AT-08 and AT-14 pass: keyboard-only inspect/select/navigation, accessibility-tree labels/states, safe text/links, and a focused WCAG 2.2 AA review. See `docs/page-inspection.md` for the interface and evidence; human screen-reader speech and full browser release checks remain Phase 19.
+- [x] All 54 unit/integration/smoke tests pass, including eight new selection, metadata/provenance, safe navigation, unknown/capped/dense graph and stale-run/disposal regressions.
+- [x] Chromium file:// keyboard checks pass for every page in a 250-node/1,000-edge fixture, graph/table selection, neighbor navigation, focus, live status and 320/768px reflow; zero automatic remote requests.
+- [x] Existing graph pointer/layout browser regressions pass after selection integration.
 * **Acceptance:** all included pages and details are reachable without pointer dragging.
 * **Commit point:** commit detail panel, list, and accessibility checks.
 

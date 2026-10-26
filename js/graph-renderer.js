@@ -45,7 +45,7 @@
     unknown.forEach(function (n, i) { result.set(n.id, { x: right + (i % columns) * 210, y: Math.floor(i / columns) * 100 }); });
     return result;
   }
-  function create(container, graph, runId, onChange) {
+  function create(container, graph, runId, onChange, onSelect) {
     var doc = container.ownerDocument, svg = container.querySelector("svg"), layer, disposed = false, listeners = [], selected = null, gesture = null;
     var positions = initialPositions(graph), nodes = new Map(), edges = [], view = { x: 0, y: 0, k: 1 }, state = new Map();
     var output = container.querySelector(".layout-status"), unpin = container.querySelector('[data-action="unpin"]');
@@ -56,7 +56,7 @@
     function announce(message) { output.textContent = message; }
     function transform() { layer.setAttribute("transform", "translate(" + view.x + " " + view.y + ") scale(" + view.k + ")"); }
     function draw() {
-      nodes.forEach(function (item, id) { var p = state.get(id); item.group.setAttribute("transform", "translate(" + p.x + " " + p.y + ")"); item.group.classList.toggle("is-pinned", p.pinned); item.group.classList.toggle("is-selected", id === selected); item.pin.textContent = p.pinned ? "Pinned" : ""; });
+      nodes.forEach(function (item, id) { var p = state.get(id); item.group.setAttribute("transform", "translate(" + p.x + " " + p.y + ")"); item.group.classList.toggle("is-pinned", p.pinned); item.group.classList.toggle("is-selected", id === selected); item.group.setAttribute("aria-pressed", String(id === selected)); item.pin.textContent = p.pinned ? "Pinned" : ""; });
       edges.forEach(function (item) {
         var s = state.get(item.edge.source), t = state.get(item.edge.target), sr = radius(nodes.get(item.edge.source).node), tr = radius(nodes.get(item.edge.target).node);
         if (s === t) { item.path.setAttribute("d", "M " + (s.x - sr * 0.7) + " " + (s.y - sr * 0.7) + " C " + (s.x - 65) + " " + (s.y - 75) + " " + (s.x + 65) + " " + (s.y - 75) + " " + (s.x + sr * 0.9) + " " + (s.y - sr * 0.9)); return; }
@@ -81,9 +81,19 @@
       var k = Math.max(0.02, Math.min(8, view.k * factor)), p = point || { x: 500, y: 350 }, ratio = k / view.k;
       view.x = p.x - (p.x - view.x) * ratio; view.y = p.y - (p.y - view.y) * ratio; view.k = k; transform();
     }
+    function select(id, reveal) {
+      if (disposed || (id !== null && !state.has(id))) return;
+      var previous = selected; selected = id;
+      if (id !== null && reveal !== false) {
+        var p = state.get(id), x = p.x * view.k + view.x, y = p.y * view.k + view.y;
+        if (x < 50 || x > 950 || y < 50 || y > 650) { view.x = 500 - p.x * view.k; view.y = 350 - p.y * view.k; transform(); }
+      }
+      draw();
+      if (previous !== id && onSelect) onSelect(id);
+    }
     function pin(id, x, y) {
       if (disposed || !state.has(id) || !Number.isFinite(x) || !Number.isFinite(y) || Math.abs(x) > 100000 || Math.abs(y) > 100000) return;
-      Object.assign(state.get(id), { x: x, y: y, pinned: true }); selected = id; draw(); changed();
+      Object.assign(state.get(id), { x: x, y: y, pinned: true }); select(id, false); changed();
     }
     function release(id) {
       if (disposed || !state.has(id)) return;
@@ -91,7 +101,7 @@
     }
     function reset() {
       if (disposed) return;
-      state.forEach(function (p, id) { Object.assign(p, positions.get(id), { pinned: false }); }); selected = null; draw(); fit(); changed(); announce("Layout reset. All pins cleared.");
+      state.forEach(function (p, id) { Object.assign(p, positions.get(id), { pinned: false }); }); select(null); fit(); changed(); announce("Layout reset. All pins cleared.");
     }
     function point(event) {
       var p = svg.createSVGPoint(); p.x = event.clientX; p.y = event.clientY;
@@ -118,7 +128,7 @@
     });
     graph.nodes.forEach(function (node) {
       var p = positions.get(node.id); state.set(node.id, { run_id: runId, node_id: node.id, x: p.x, y: p.y, pinned: false });
-      var group = el("g", { "class": "graph-node", "data-node-id": node.id, tabindex: "0", role: "button", "aria-label": node.url + "; depth " + (node.depth === null ? "unknown" : node.depth) + ". Enter selects for layout controls." }, layer);
+      var group = el("g", { "class": "graph-node", "data-node-id": node.id, tabindex: "0", role: "button", "aria-pressed": "false", "aria-label": node.url + "; depth " + (node.depth === null ? "unknown" : node.depth) + "; " + node.inDegree + " inbound and " + node.outDegree + " outbound links. Enter or Space inspects page details." }, layer);
       el("title", {}, group).textContent = node.url + (node.title ? " — " + node.title : "");
       el("circle", { r: radius(node), fill: color(node), "class": node.depth === null ? "unknown-depth" : "" }, group);
       el("text", { y: radius(node) + 16, "class": "node-label", "text-anchor": "middle" }, group).textContent = label(node);
@@ -128,7 +138,7 @@
     listen(svg, "pointerdown", function (event) {
       if (event.button !== 0 || gesture) return;
       var p = point(event), target = event.target.closest(".graph-node"), id = target && target.getAttribute("data-node-id");
-      if (id) { selected = id; draw(); announce("Selected " + label(nodes.get(id).node) + (state.get(id).pinned ? ". Pinned." : ". Drag to pin.")); }
+      if (id) { select(id, false); target.focus(); announce("Selected " + label(nodes.get(id).node) + (state.get(id).pinned ? ". Pinned." : ". Drag to pin.")); }
       var captureTarget = target || svg;
       gesture = { pointerId: event.pointerId, id: id, captureTarget: captureTarget, start: p, origin: id ? Object.assign({}, state.get(id)) : Object.assign({}, view), moved: false };
       // Capturing on the node preserves click/double-click targeting after drag.
@@ -145,9 +155,15 @@
     ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (name) { listen(svg, name, end); });
     listen(svg, "wheel", function (event) { event.preventDefault(); if (!gesture) zoom(event.deltaY < 0 ? 1.15 : 1 / 1.15, point(event)); }, { passive: false });
     listen(svg, "dblclick", function (event) { var g = event.target.closest(".graph-node"); if (g) release(g.getAttribute("data-node-id")); });
+    listen(svg, "focusin", function (event) {
+      var g = event.target.closest(".graph-node"); if (g) select(g.getAttribute("data-node-id"));
+    });
+    listen(svg, "click", function (event) {
+      var g = event.target.closest(".graph-node"); if (g) select(g.getAttribute("data-node-id"), false);
+    });
     listen(svg, "keydown", function (event) {
       var g = event.target.closest(".graph-node");
-      if (g && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); selected = g.getAttribute("data-node-id"); draw(); announce("Node selected for layout controls."); }
+      if (g && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); select(g.getAttribute("data-node-id")); announce("Page selected. Details and included links are available below the graph."); }
     });
     container.querySelectorAll("[data-action]").forEach(function (button) {
       button.disabled = false;
@@ -161,7 +177,7 @@
       });
     });
     container.hidden = false; draw(); fit(); changed(); announce("Drag a node to pin it. Drag the canvas to pan; use the wheel or buttons to zoom.");
-    return Object.freeze({ fit: fit, zoom: zoom, pin: pin, unpin: release, reset: reset, getLayoutState: snapshot,
+    return Object.freeze({ select: select, fit: fit, zoom: zoom, pin: pin, unpin: release, reset: reset, getLayoutState: snapshot,
       destroy: function () {
         if (disposed) return;
         if (gesture) end({ pointerId: gesture.pointerId });

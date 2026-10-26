@@ -330,3 +330,26 @@ a {
 .graph-help, .layout-status { margin: 0; padding: 0.5rem 1rem; font-size: 0.8rem; line-height: 1.5; }
 .layout-status { min-height: 2.5rem; color: #475569; }
 @media (max-width: 760px) { .state-badge { white-space: nowrap; } }
+
+/* Native table/buttons provide a keyboard alternative at every graph density. */
+.inspection-skip { display: inline-block; margin: 0.5rem 1rem; padding: 0.4rem; text-decoration: underline; }
+.page-inspection { padding: 1.25rem; min-width: 0; }
+.page-inspection h2 { font-size: 1.15rem; }
+.page-inspection h3 { font-size: 1rem; margin-top: 1.5rem; }
+.page-inspection p, .page-inspection li { line-height: 1.6; }
+.page-table-scroll { padding: 0.4rem; }
+.page-inspection table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.page-inspection caption { text-align: left; padding-bottom: 0.75rem; }
+.page-inspection th, .page-inspection td { padding: 0.6rem 0.3rem; text-align: left; border-bottom: 1px solid #536174; overflow-wrap: anywhere; }
+.page-inspection th:first-child { width: 55%; }
+.page-inspection button { font: inherit; min-height: 2rem; min-width: 2rem; padding: 0.4rem; text-align: left; color: #e6edf3; background: #18222e; border: 1px solid #8b949e; border-radius: 0.3rem; cursor: pointer; overflow-wrap: anywhere; max-width: 100%; }
+.page-inspection button[aria-pressed="true"] { border: 3px solid #58a6ff; text-decoration: underline; }
+.page-inspection button:focus-visible, .page-inspection a:focus-visible { outline: 3px solid #58a6ff; outline-offset: 2px; }
+.page-inspection dt { font-weight: 700; margin-top: 0.8rem; }
+.page-inspection dd { margin: 0.25rem 0 0; }
+.page-detail-content { overflow-wrap: anywhere; }
+.page-detail-content a { display: inline-block; padding: 0.5rem 0; color: #79c0ff; text-decoration: underline; }
+.page-detail-content ul { padding-left: 1.5rem; }
+.selection-status { min-height: 2rem; }
+.graph-node:focus-visible { outline: none; }
+.graph-node:focus-visible circle { stroke: #0f172a; stroke-width: 5; }

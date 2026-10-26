@@ -2,9 +2,10 @@
   "use strict";
   var form = document.getElementById("run-form");
   if (!form) return;
-  var current = null, sequence = 0, renderer = null;
+  var current = null, sequence = 0, renderer = null, details = null;
   var status = document.getElementById("run-status"), summary = document.getElementById("run-summary");
   function clearGraph() {
+    if (details) details.destroy(); details = null;
     if (renderer) renderer.destroy(); renderer = null;
     form.graph = null; form.layoutState = null;
     document.getElementById("empty-state").hidden = false;
@@ -12,7 +13,8 @@
   }
   function showGraph(graph, id) {
     if (graph.nodes.length && typeof SitemapRenderer !== "undefined") {
-      renderer = SitemapRenderer.create(document.getElementById("graph-view"), graph, id, function (state) { form.layoutState = state; });
+      renderer = SitemapRenderer.create(document.getElementById("graph-view"), graph, id, function (state) { form.layoutState = state; }, function (id) { if (details) details.select(id); });
+      if (typeof SitemapDetails !== "undefined") details = SitemapDetails.create(document.getElementById("page-inspection"), graph, renderer);
       document.getElementById("empty-state").hidden = true;
     }
     document.getElementById("graph-count").textContent = graph.nodes.length + " pages · " + graph.edges.length + " links";

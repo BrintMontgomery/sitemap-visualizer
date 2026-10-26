@@ -12,6 +12,7 @@
   <script src="js/html-import.js" defer></script>
   <script src="js/graph.js" defer></script>
   <script src="js/graph-renderer.js" defer></script>
+  <script src="js/page-details.js" defer></script>
   <script src="js/app.bundle.js" defer></script>
   <script src="js/run-controls.js" defer></script>
 </head>
@@ -61,8 +62,9 @@
           <button type="button" data-action="reset" disabled>Reset layout</button>
           <button type="button" data-action="unpin" disabled>Unpin selected</button>
         </div>
+        <a class="inspection-skip" href="#page-list-title">Skip graph to page list and details</a>
         <svg id="graph-canvas" viewBox="0 0 1000 700" role="group" aria-label="Directed sitemap graph" aria-describedby="graph-help"></svg>
-        <p id="graph-help" class="graph-help">Arrows point to link targets. Drag nodes to pin; drag the canvas to pan. Double-click a node or use Unpin selected to release it. Gray dashed nodes have unknown depth.</p>
+        <p id="graph-help" class="graph-help">Arrows point to link targets. Drag nodes to pin; drag the canvas to pan. Double-click a node or use Unpin selected to release it. Gray dashed nodes have unknown depth. Tab to a node to inspect it, or use the page list below. Enter and Space also select a node.</p>
         <p class="layout-status" role="status" aria-live="polite"></p>
       </div>
 
@@ -82,6 +84,22 @@
       <p id="application-status" class="visually-hidden" role="status" aria-live="polite">
         Starting application.
       </p>
+      <section id="page-inspection" class="page-inspection" aria-labelledby="page-list-title" hidden>
+        <h2 id="page-list-title" tabindex="-1">Included pages</h2>
+        <p>Tab to a page to inspect it. Inbound and outbound counts refer only to included links. XML inventory establishes no hyperlinks.</p>
+        <div class="page-table-scroll">
+          <table>
+            <caption>Included pages and directed link counts</caption>
+            <thead><tr><th scope="col">Page (select to inspect)</th><th scope="col">Depth</th><th scope="col">Inbound</th><th scope="col">Outbound</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="selection-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        <section aria-labelledby="page-details-title">
+          <h2 id="page-details-title">Selected page details</h2>
+          <div class="page-detail-content"></div>
+        </section>
+      </section>
     </section>
 
     <aside class="info-panel" aria-labelledby="about-title">
@@ -90,7 +108,7 @@
       <p>Open this page directly in your browser. The application shell uses local files and needs no server or network connection to start.</p>
       <div class="info-divider"></div>
       <p class="info-caption">Current build</p>
-      <p class="build-note">Import local data, then drag, pin, pan, zoom, and fit the graph. Layout changes stay in this run. XML inventory alone establishes no links. Details, live retrieval, and exports are scheduled for later phases.</p>
+      <p class="build-note">Import local data, then drag, pin, pan, zoom, and fit the graph. Layout changes stay in this run. XML inventory alone establishes no links. Use the page list to inspect evidence and navigate included links with the keyboard. Live retrieval and exports are scheduled for later phases.</p>
     </aside>
   </main>
 
