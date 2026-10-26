@@ -273,23 +273,24 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 10: CORS-readable fetch adapter
-*Read only responses the browser actually permits. **Risk:** High — browser errors and redirects can be falsely presented as proven CORS or page contents. **Thinking effort:** High (advanced model). **Depends on:** 2, 7.*
+## [ ] Phase 10: Resilient internal network and CORS fetch adapter
+*Enable internal network crawling and handle CORS boundaries gracefully without stalling execution. **Risk:** High — non-CORS readable responses or internal timeout delays can impact run efficiency if not handled asynchronously. **Thinking effort:** High (advanced model). **Depends on:** 2, 7.*
 
 ### 1. Objectives & Scope
-* **In scope:** explicit `live-cors` mode, bounded GET, cancellation, observable metadata and content validation.
-* **Done means:** readable public HTML/XML becomes validated acquisition evidence; blocked or opaque responses do not.
+* **In scope:** internal network/intranet endpoint target resolution (including permitted private/loopback IP ranges), resilient CORS error handling, non-blocking fallback modes, bounded GET requests, cancellation, and observable metadata validation.
+* **Done means:** internal pages and reachable HTTP(S) endpoints are parsed when accessible; CORS-restricted or opaque responses are flagged cleanly without halting or slowing down the broader crawling run.
 
 ### 2. Implementation Checklist
-- [ ] Implement `fetch` with `mode: 'cors'`, omitted credentials, abort/timeout, bounded streamed reads, content-kind and scope checks.
-- [ ] Record observable final URL/status, bytes, duration, issues and unknown redirect details; reject disallowed observable target hosts.
-- [ ] Reject non-HTTP(S), literal private/loopback and known metadata targets; use no forged `Origin`, `Host`, or `User-Agent` headers.
-- [ ] Surface a generic network-or-policy failure where JavaScript cannot distinguish CORS from transport failure.
+- [ ] Implement flexible `fetch` handling that gracefully intercepts CORS policy restrictions (e.g., handling cross-origin fetch failures and non-opaque fallbacks) so execution continues seamlessly.
+- [ ] Remove explicit private/loopback IP blocking rules to allow discovery and mapping across configured internal network ranges and local intranet hosts.
+- [ ] Implement configurable timeout and request abort mechanisms to ensure slow or non-responsive internal network nodes do not stall the crawler.
+- [ ] Streamline error categorization so CORS issues, transport drops, and timeouts log actionable status codes without throwing unhandled exceptions or blocking queued tasks.
+- [ ] Record observable final URLs, HTTP statuses, byte counts, request duration, and access issues while keeping graph processing resilient to endpoint failures.
 
 ### 3. Testing & Verification
-* **Checks:** AT-22–24 and AT-37 with development-only CORS-allowed/denied fixtures, oversize and timeout cases.
-* **Acceptance:** no opaque body enters the parser; cancellation and all failures terminate.
-* **Commit point:** commit adapter and focused fixture checks.
+* **Checks:** AT-22–24 and AT-37 updated with internal network targets, intranet fixtures, simulated CORS-denied endpoints, timeout handling, and high-concurrency internal crawl tests.
+* **Acceptance:** internal host links are mapped when accessible; CORS errors log transparently without halting the crawl process or freezing the UI.
+* **Commit point:** commit internal fetch adapter, resilient CORS handler, and test suite.
 
 ---
 
