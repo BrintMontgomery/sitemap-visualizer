@@ -4,8 +4,8 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 5 — complete; Phase 6 is next; Phases 1–5 are complete.
-* **Last green commit:** Phase 5 inert HTML adapter, unit checks, and Chromium file:// network checks pass; the interactive visualizer remains unimplemented.
+* **Current phase:** Phase 6 — complete; Phase 7 is next; Phases 1–6 are complete.
+* **Last green commit:** Phase 6 graph pipeline and all 39 unit/integration/smoke tests pass; the interactive visualizer remains unimplemented. See `docs/graph.md` for graph semantics and limits.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
@@ -183,7 +183,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 6: Graph construction and depth
+## [x] Phase 6: Graph construction and depth
 *Merge validated records into a graph with honest edge semantics. **Risk:** Medium — sitemap-only pages may acquire false paths. **Thinking effort:** Medium (simple model). **Depends on:** 3–5.*
 
 ### 1. Objectives & Scope
@@ -191,13 +191,16 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** every edge comes from an explicit link claim, and depth is the shortest directed route from the chosen root.
 
 ### 2. Implementation Checklist
-- [ ] Deduplicate normalized page IDs and source/target edge pairs while retaining all evidence references.
-- [ ] Keep sitemap membership and redirect aliases separate; leave unlinked inventory depth null.
-- [ ] Apply page/depth caps to included records, track exclusions, and calculate distinct in/out degree.
-- [ ] Add graph tests for cycles, cross-links, fragments, missing root, sitemap-only pages, and cap boundaries.
+- [x] Deduplicate normalized page IDs and source/target edge pairs while retaining all evidence references.
+- [x] Keep sitemap membership and redirect aliases separate; leave unlinked inventory depth null.
+- [x] Apply page/depth caps to included records, track exclusions, and calculate distinct in/out degree.
+- [x] Add graph tests for cycles, cross-links, fragments, missing root, sitemap-only pages, and cap boundaries.
 
 ### 3. Testing & Verification
 * **Checks:** AT-03–07, AT-21, AT-34; compare exact node/edge/depth sets.
+- [x] `npm test` passes all 39 tests, including 12 focused graph tests and unchanged import/contract checks.
+- [x] Regression coverage verifies combined-source provenance, spoofed evidence rejection, unknown depth, deterministic cap selection, record/byte limits, redirect separation, immutable snapshots, and local classic-script loading.
+* **Decision:** `buildGraph(run, imports)` consumes validated adapter outputs. Missing/absent roots preserve unknown depths; cap selection prioritizes shortest reachable routes before unknown-depth records. See `docs/graph.md` for the interface and remaining later-phase acceptance boundaries.
 * **Acceptance:** four-page fixture yields specified edges/depths and sitemap-only nodes have no invented links.
 * **Commit point:** commit graph pipeline and tests.
 

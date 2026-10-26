@@ -99,5 +99,6 @@
     var accepted = { ok: true, result: Object.freeze({ transport: run.mode, status: value.status, contentKind: value.contentKind, evidenceClass: value.evidenceClass, payload: value.payload, inputReference: value.inputReference, resourceUrl: requested ? requested.url : null, observedFinalUrl: finalUrl ? finalUrl.url : null, sourceOrigin: requested ? new URL(requested.url).origin : null, httpStatus: requested ? value.httpStatus : null, redirectHistory: null, startedAt: value.startedAt, elapsedMs: value.elapsedMs, bytesRead: value.bytesRead, issues: Object.freeze(value.issues.slice()) }) };
     Object.freeze(accepted); validated.set(accepted, run); return accepted;
   }
-  return Object.freeze({ modes: modes, statuses: statuses, evidenceClasses: evidenceClasses, issueCodes: issueCodes, limits: limits, defaults: defaults, normalizeUrl: normalizeUrl, inScope: inScope, uniqueUrls: uniqueUrls, createRun: createRun, createBudget: createBudget, validateResult: validateResult });
+  function isValidatedResult(value) { return !!value && validated.has(value); }
+  return Object.freeze({ modes: modes, statuses: statuses, evidenceClasses: evidenceClasses, issueCodes: issueCodes, limits: limits, defaults: defaults, normalizeUrl: normalizeUrl, inScope: inScope, uniqueUrls: uniqueUrls, createRun: createRun, createBudget: createBudget, validateResult: validateResult, isValidatedResult: isValidatedResult });
 });
