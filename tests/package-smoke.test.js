@@ -18,12 +18,13 @@ test("the direct-file entry point uses local stylesheet and deferred classic scr
   const scriptTags = [...html.matchAll(/<script\b[^>]*src=["']([^"']+)["'][^>]*>/gi)];
 
   assert.equal(stylesheetTags.length, 1, "one local stylesheet should be loaded");
-  assert.equal(scriptTags.length, 4, "contracts load before the application script");
+  assert.equal(scriptTags.length, 5, "contracts load before the application script");
   assert.equal(scriptTags[0][1], "js/contracts.js");
   assert.equal(scriptTags[1][1], "js/csv-import.js"
   );
   assert.equal(scriptTags[2][1], "js/xml-import.js");
-  assert.equal(scriptTags[3][1], "js/app.bundle.js");
+  assert.equal(scriptTags[3][1], "js/html-import.js");
+  assert.equal(scriptTags[4][1], "js/app.bundle.js");
   assert.match(stylesheetTags[0][0], /href=["']css\/styles\.css["']/i);
   assert.match(scriptTags[0][0], /defer(?:\s|>)/i);
   assert.doesNotMatch(scriptTags[0][0], /type=["']module["']/i);
@@ -102,7 +103,7 @@ test("the application has no third-party runtime package or remote asset require
   const packageJson = JSON.parse(readProjectFile("package.json"));
 
   assert.equal(packageJson.dependencies, undefined);
-  assert.equal(packageJson.devDependencies, undefined);
+  assert.deepEqual(packageJson.devDependencies, { jsdom: "26.1.0" }, "DOM test tools are development-only");
   assert.doesNotMatch(html, /<(?:script|link)\b[^>]*(?:https?:)?\/\//i);
   assert.doesNotMatch(css, /@import\s+[^;]*https?:\/\//i);
   assert.match(readProjectFile("THIRD_PARTY_NOTICES.md"), /no third-party runtime libraries/i);

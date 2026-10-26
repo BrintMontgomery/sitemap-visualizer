@@ -1,0 +1,9 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Phase 5 browser check</title>
+<script src="../js/contracts.js" defer></script><script src="../js/html-import.js" defer></script>
+<script src="html-import-browser.js" defer></script>
+<h1>Phase 5 browser check</h1>
+<p>Open Developer Tools → Network, clear the log, select sample-data/hostile-page.html, then import. No remote requests should occur. Imported content must not change this page.</p>
+<label>Selected HTML file <input id="file" type="file" accept=".html,.htm"></label>
+<label>Declared source URL <input id="source" value="https://example.test/section/page.html"></label>
+<button id="import" type="button">Import</button><pre id="result">Awaiting file.</pre>
+</html>

@@ -1,0 +1,16 @@
+<!doctype html><html><head><title>Hostile fixture</title>
+<base href="https://canary.invalid/">
+<link rel="stylesheet" href="https://canary.invalid/style.css">
+<style>@import url(https://canary.invalid/import.css); body {background:url(https://canary.invalid/bg.png)}</style>
+<meta http-equiv="refresh" content="0;url=https://canary.invalid/refresh">
+<script>globalThis.phase5Executed = true; fetch('https://canary.invalid/fetch');</script>
+<script src="https://canary.invalid/script.js"></script></head><body onload="globalThis.phase5Executed=true">
+<img src="https://canary.invalid/image.png" onerror="globalThis.phase5Executed=true">
+<iframe src="https://canary.invalid/frame"></iframe>
+<iframe srcdoc="<script>parent.phase5Executed=true</script>"></iframe>
+<object data="https://canary.invalid/object"></object><embed src="https://canary.invalid/embed">
+<video poster="https://canary.invalid/poster" src="https://canary.invalid/video" autoplay></video>
+<svg onload="globalThis.phase5Executed=true"><image href="https://canary.invalid/svg.png"/></svg>
+<a href="/safe" onclick="globalThis.phase5Executed=true">Safe link</a>
+<a href="javascript:globalThis.phase5Executed=true">Unsafe link</a>
+</body></html>

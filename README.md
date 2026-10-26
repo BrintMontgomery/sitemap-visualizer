@@ -13,10 +13,11 @@ Import, analysis, graph interaction, and export features will be added in later 
 The app itself has no runtime dependency installation. To run the development smoke tests, install Node.js 18 or later and run:
 
 ```sh
+npm ci
 npm test
 ```
 
-The tests use Node's built-in test runner. They do not start a server or make network requests.
+The tests use Node's built-in test runner and the development-only jsdom package for HTML extraction checks. See `docs/html-import.md` for the separate browser check. They do not start a server or make network requests.
 
 ## Project files
 

@@ -4,8 +4,8 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 5 — not started; Phases 1–4 are complete.
-* **Last green commit:** Phase 4 XML sitemap adapter and contract checks pass; the interactive visualizer remains unimplemented.
+* **Current phase:** Phase 5 — complete; Phase 6 is next; Phases 1–5 are complete.
+* **Last green commit:** Phase 5 inert HTML adapter, unit checks, and Chromium file:// network checks pass; the interactive visualizer remains unimplemented.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
@@ -161,7 +161,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 5: Local HTML import
+## [x] Phase 5: Local HTML import
 *Extract links from user-supplied pages as inert data. **Risk:** Medium — active markup or wrong base URLs may misstate link targets. **Thinking effort:** Medium (simple model). **Depends on:** 2.*
 
 ### 1. Objectives & Scope
@@ -169,12 +169,15 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** relative links resolve from the correct source and imported scripts/assets never execute or load.
 
 ### 2. Implementation Checklist
-- [ ] Parse selected HTML with `DOMParser` as detached data; ignore scripts, handlers, resource loading, and invalid/unsafe URLs.
-- [ ] Require a declared source URL when one cannot be trusted or derived; resolve relative anchors and preserve source evidence.
-- [ ] Add fixtures with relative links, duplicate anchors, hostile markup, absent base URL, and oversized files.
+- [x] Parse selected HTML in native inert template contents (documented DOMParser deviation); ignore scripts, handlers, resource loading, and invalid/unsafe URLs.
+- [x] Require a declared source URL when one cannot be trusted or derived; resolve relative anchors and preserve source evidence.
+- [x] Add fixtures with relative links, duplicate anchors, hostile markup, absent base URL, and oversized files.
 
 ### 3. Testing & Verification
-* **Checks:** AT-31 and NFR-004/026; inspect network while importing hostile fixture.
+* **Checks:** AT-31 and NFR-004/026: `npm test` passes 27 tests; real Chromium file:// extraction, bounds, hostile-file script isolation and network observation pass. See `docs/html-import.md`.
+- [x] HTML extraction, provenance, duplicates, unsafe URLs, parser/read failures, and generated limit regression tests pass.
+- [x] Hostile-file browser check reports zero remote requests and no imported script execution; network observer positive control passes.
+* **Decision:** Use native inert template contents instead of detached DOMParser HTML to avoid resource loading. Explicit source URL is also the resolution base; embedded base tags are ignored with a visible issue. See `docs/html-import.md` for limitations and browser evidence.
 * **Acceptance:** valid links carry HTML-file evidence and no imported active content runs.
 * **Commit point:** commit HTML adapter and fixtures.
 
