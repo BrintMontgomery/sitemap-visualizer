@@ -6,14 +6,14 @@ const contracts=require('../js/contracts');
 const setup=()=>{
   const dom=new JSDOM(fs.readFileSync('index.html','utf8'),{runScripts:'outside-only'}), w=dom.window;
   w.SitemapContracts=contracts;
-  w.SitemapGraph={buildGraph:(run,batches)=>({nodes:[],edges:[],exclusions:[],issues:[],partial:false,tag:batches[0].tag})};
+  w.SitemapGraph={buildGraph:(run,batches)=>({nodes:[{url:"http://intranet/"}],edges:[],exclusions:[],issues:[],partial:false,tag:batches[0].tag})};
   return {dom,w,f:w.document.getElementById('run-form'),status:w.document.getElementById('run-status')};
 };
 test('live controls validate expanded budgets, clamp import ranges, and isolate cancelled/replaced runs',async()=>{
   const {dom,w,f,status}=setup(), calls=[];
   try {
     w.SitemapDiscovery={discover:(run,options)=>new Promise(resolve=>calls.push({run,options,resolve}))};
-    w.eval(fs.readFileSync('js/run-controls.js','utf8'));
+    w.SitemapOutcomes=require('../js/outcome-report');w.eval(fs.readFileSync('js/run-controls.js','utf8'));
     const submit=()=>f.onsubmit({preventDefault(){}});
     f.elements.mode.value='live-cors'; f.elements.mode.onchange(); f.elements.rootUrl.value='http://intranet/';
     assert.equal(f.elements.maxPages.max,'1000'); assert.equal(f.elements.maxDepth.max,'20');
@@ -35,7 +35,7 @@ test('request diagnostics render hostile endpoint text safely, including failed-
   const {dom,w,f,status}=setup();
   try {
     w.SitemapDiscovery={discover:async()=>({ok:false,issue:{code:'NETWORK_OR_POLICY_FAILURE',message:'Unknown cause'},attempts:[{resourceUrl:'<script>bad</script>',httpStatus:null,observedFinalUrl:null,bytesRead:0,elapsedMs:12,issues:['NETWORK_OR_POLICY_FAILURE']}]})};
-    w.eval(fs.readFileSync('js/run-controls.js','utf8'));f.elements.mode.value='live-cors';f.elements.mode.onchange();f.elements.rootUrl.value='http://intranet/';
+    w.SitemapOutcomes=require('../js/outcome-report');w.eval(fs.readFileSync('js/run-controls.js','utf8'));f.elements.mode.value='live-cors';f.elements.mode.onchange();f.elements.rootUrl.value='http://intranet/';
     await f.onsubmit({preventDefault(){}});assert.equal(status.dataset.state,'failed');assert.equal(f.graph,null);
     assert.equal(w.document.querySelector('#discovery-log script'),null);assert.match(w.document.getElementById('discovery-log').textContent,/<script>bad/);assert.match(w.document.getElementById('discovery-log').textContent,/HTTP status unknown/);
   } finally {dom.window.close();}

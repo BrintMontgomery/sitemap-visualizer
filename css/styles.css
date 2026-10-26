@@ -359,3 +359,5 @@ a {
 #run-form label { display: inline-block; max-width: 100%; }
 #run-form input, #run-form select { box-sizing: border-box; max-width: 100%; }
 #discovery-log li { overflow-wrap: anywhere; }
+
+#run-diagnostics { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }

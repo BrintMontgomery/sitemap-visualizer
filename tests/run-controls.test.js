@@ -8,8 +8,8 @@ test('controls validate, cancel, replace and ignore stale results',async()=>{
  let resolve;
  w.SitemapContracts=contracts;
  w.SitemapCsvImport={importFile:()=>new Promise(r=>{resolve=r;})};
- w.SitemapGraph={buildGraph:()=>({nodes:[],edges:[],exclusions:[],issues:[],partial:false})};
- w.eval(fs.readFileSync('js/run-controls.js','utf8'));
+ w.SitemapGraph={buildGraph:()=>({nodes:[{url:"http://intranet/"}],edges:[],exclusions:[],issues:[],partial:false})};
+ w.SitemapOutcomes=require('../js/outcome-report');w.eval(fs.readFileSync('js/run-controls.js','utf8'));
  const submit=()=>f.onsubmit({preventDefault(){}});
  await submit();assert.equal(status.dataset.state,'failed');
  Object.defineProperty(f.elements.inputFile,'files',{value:[{name:'links.csv'}]});

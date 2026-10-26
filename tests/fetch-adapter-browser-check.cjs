@@ -59,14 +59,14 @@ const root = path.resolve(__dirname, '..');
     assert.deepEqual(first.graph.edges.map(e => [e.source, e.target]), [[origin + '/allowed', origin + '/child']]);
     assert.equal(first.graph.nodes.find(n => n.url.endsWith('/allowed')).fetched, true);
     assert.equal(first.graph.nodes.find(n => n.url.endsWith('/child')).fetched, true);
-    assert.match(await page.locator('#run-summary').textContent(), /bounded readable discovery/);
+    assert.match(await page.locator('#run-summary').textContent(), /Bounded browser-readable discovery/);
     assert.equal(await page.locator('[name=inputFile]').isDisabled(), true);
     assert.equal(requests.length, 3); assert.equal(requests[0].cookie, undefined); assert.equal(requests[0].referer, undefined); assert.equal(requests[0].origin, 'null');
     await page.screenshot({ path: process.env.FETCH_SCREENSHOT_PATH || '/tmp/phase11-live.png', fullPage: true });
 
     await live('/denied'); await terminal();
-    assert.match(await page.locator('#run-status').textContent(), /NETWORK_OR_POLICY_FAILURE/);
-    assert.match(await page.locator('#run-status').textContent(), /cause is unknown/);
+    assert.match(await page.locator('#outcome-guidance').textContent(), /NETWORK_OR_POLICY_FAILURE/);
+    assert.match(await page.locator('#outcome-guidance').textContent(), /does not reveal which cause/);
     assert.equal(await page.evaluate(() => document.getElementById('run-form').graph), null);
     const denied = await page.evaluate(() => document.getElementById('run-form').attempt);
     assert.equal(denied.httpStatus, null); assert.equal(denied.observedFinalUrl, null); assert.equal(denied.bytesRead, 0);
@@ -81,7 +81,7 @@ const root = path.resolve(__dirname, '..');
 
     for (const [pathname, code] of [['/missing', 'HTTP_ERROR'], ['/oversize', 'SIZE_LIMIT'], ['/other-host', 'SCOPE_EXCLUDED'], ['/slow', 'TIMEOUT']]) {
       await live(pathname, pathname === '/slow' ? '50' : '1000'); await terminal();
-      assert.match(await page.locator('#run-status').textContent(), new RegExp(code));
+      assert.match(await page.locator('#outcome-guidance').textContent(), new RegExp(code));
       assert.equal(await page.evaluate(() => document.getElementById('run-form').graph), null);
     }
     await live('/redirect'); await terminal();
@@ -136,10 +136,19 @@ const root = path.resolve(__dirname, '..');
     await page.click('[type=submit]'); await terminal();
     assert.equal(await page.locator('#run-status').getAttribute('data-state'), 'complete');
     assert.equal(requests.length, beforeImport);
+    assert.equal(await page.evaluate(() => document.getElementById('run-form').report.outcome), 'user-supplied');
+    await live('/allowed?token=QUERY_SECRET#FRAGMENT_SECRET'); await terminal();
+    assert.equal(await page.evaluate(() => document.getElementById('run-form').report.outcome), 'readable');
+    for (const selector of ['#run-summary', '#run-diagnostics', '#discovery-log']) assert.doesNotMatch(await page.locator(selector).textContent(), /QUERY_SECRET|FRAGMENT_SECRET/);
+    await page.locator('#outcome-report summary').click();
+    await page.setViewportSize({ width: 320, height: 1024 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.screenshot({ path: '/tmp/phase12-outcomes.png', fullPage: true });
+    await page.setViewportSize({ width: 1280, height: 1000 });
     assert.ok(requests.every(r => r.method === 'GET'));
     assert.ok(requests.every(r => !r.path.includes('unwanted')));
     assert.deepEqual(errors, []);
-    console.log(JSON.stringify({ browser: await browser.version(), fileLaunch: 'passed', corsAllowedDenied: 'passed', loopback: 'passed', opaque: 'rejected', redirectsHttpBytesTimeoutCancelReplacement: 'passed', localImportFallback: 'passed', automaticTraversal: 'passed', recursiveSitemaps: 'passed', robotsIgnored: 'passed', depthCap: 'passed', pageErrors: errors.length }));
+    console.log(JSON.stringify({ browser: await browser.version(), fileLaunch: 'passed', corsAllowedDenied: 'passed', loopback: 'passed', opaque: 'rejected', redirectsHttpBytesTimeoutCancelReplacement: 'passed', localImportFallback: 'passed', automaticTraversal: 'passed', recursiveSitemaps: 'passed', robotsIgnored: 'passed', depthCap: 'passed', outcomesAndRedactedDiagnostics: 'passed', pageErrors: errors.length }));
   } finally {
     if (browser) await browser.close();
     server.closeAllConnections(); await new Promise(resolve => server.close(resolve));

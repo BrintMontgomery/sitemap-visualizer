@@ -16,6 +16,7 @@
   <script src="js/graph-renderer.js" defer></script>
   <script src="js/page-details.js" defer></script>
   <script src="js/app.bundle.js" defer></script>
+  <script src="js/outcome-report.js" defer></script>
   <script src="js/run-controls.js" defer></script>
 </head>
 <body>
@@ -41,6 +42,7 @@
 <button type="submit">Analyze / New run</button><button id="cancel-run" type="button">Cancel</button><button id="reset-run" type="button">Reset</button>
 <p>Live discovery follows readable links and sitemap indexes within the root host. Robots restrictions are ignored. Pages (up to 1,000), depth (up to 20), concurrency, time, byte and record limits bound coverage. HTTP(S) intranet and loopback hosts are allowed. The browser still controls CORS, mixed content and local-network permissions. Files stay in session memory. XML membership establishes no hyperlinks. Without a known root, link depth remains unknown.</p>
 <p id="run-status" role="status" aria-live="polite" data-state="queued">Ready for input.</p><p id="run-summary"></p>
+<section id="outcome-report" aria-label="Outcome and coverage" hidden><p id="outcome-guidance"></p><p id="outcome-alternatives"></p><details><summary>Local diagnostics (redacted)</summary><pre id="run-diagnostics"></pre></details></section>
 <details id="discovery-log" hidden><summary>Discovery request log</summary><p>Robots restrictions ignored. Requests stay within the root host and browser access rules.</p><ol></ol></details>
 </form>
 <main id="main-content" class="app-layout">

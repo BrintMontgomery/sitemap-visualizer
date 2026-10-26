@@ -103,7 +103,7 @@ test('controller clears details on replacement/reset, and cancelled or stale imp
  const graph=await fixture(),dom=new JSDOM(fs.readFileSync('index.html','utf8'),{runScripts:'outside-only'}),w=dom.window,doc=w.document,form=doc.getElementById('run-form');
  const pending=[];w.SitemapContracts=contracts;w.SitemapRenderer=rendererApi;w.SitemapDetails=detailsApi;
  w.SitemapGraph={buildGraph:()=>graph};w.SitemapCsvImport={importFile:()=>new Promise(resolve=>pending.push(resolve))};
- w.eval(fs.readFileSync('js/run-controls.js','utf8'));Object.defineProperty(form.elements.inputFile,'files',{value:[{name:'links.csv'}]});
+ w.SitemapOutcomes=require('../js/outcome-report');w.eval(fs.readFileSync('js/run-controls.js','utf8'));Object.defineProperty(form.elements.inputFile,'files',{value:[{name:'links.csv'}]});
  const submit=()=>form.onsubmit({preventDefault(){}}),container=doc.getElementById('page-inspection');
  let run=submit();pending.shift()({ok:true});await run;container.querySelector('tbody button').focus();assert.ok(container.querySelector('dl'));
  const staleRun=submit(),stale=pending.shift();assert.equal(container.hidden,true);assert.equal(container.querySelectorAll('button').length,0);
