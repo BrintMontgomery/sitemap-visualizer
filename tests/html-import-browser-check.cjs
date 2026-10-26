@@ -31,7 +31,7 @@ const root = require('node:path').resolve(__dirname, '..');
    const missing = await SitemapHtmlImport.importFile(f(''),run);
    return {targets:r.claims.map(c=>c.target),title:r.page.title,duplicates:r.claims[0].evidence.length,record:record.truncated,element:element.issue.code,nesting:nesting.issue.code,oversized:oversized.issue.code,missing:missing.issue.code};
   }, {relative:fs.readFileSync(root+'/sample-data/relative-page.html','utf8'), maxBytes:2000000,maxRecords:10000,maxElements:20000,maxNesting:64});
-  assert.deepEqual(result, {targets:['https://example.test/about','https://example.test/section/contact?x=1&y=2','https://other.test/'], title:'Saved & linked',duplicates:2,record:true,element:'PARTIAL_LIMIT',nesting:'PARTIAL_LIMIT',oversized:'SIZE_LIMIT',missing:'URL_REJECTED'});
+  assert.deepEqual(result, {targets:['https://example.test/about','https://example.test/section/contact?x=1&y=2','https://other.test/','http://127.0.0.1/'], title:'Saved & linked',duplicates:2,record:true,element:'PARTIAL_LIMIT',nesting:'PARTIAL_LIMIT',oversized:'SIZE_LIMIT',missing:'URL_REJECTED'});
   console.log('Real-browser extraction and bounds passed.');
   await page.evaluate(() => fetch('https://canary.invalid/positive-control').catch(() => {}));
   assert.deepEqual(requests, ['https://canary.invalid/positive-control']);

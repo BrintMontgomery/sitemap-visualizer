@@ -7,7 +7,7 @@
   "use strict";
 
   var modes = Object.freeze({
-    "live-cors": "Live retrieval is not implemented yet.",
+    "live-cors": "Bounded single-page retrieval; automatic discovery is not implemented yet.",
     "iframe-bridge": "No compatible bridge is configured.",
     "jsonp-provider": "No approved provider is configured.",
     "xml-import": "XML import is not implemented yet.",
@@ -22,25 +22,12 @@
   var defaults = Object.freeze({ maxPages: 50, maxDepth: 2 });
 
   function rejected(message) { return { ok: false, issue: { code: "URL_REJECTED", message: message } }; }
-  function unsafeHost(host) {
-    host = host.toLowerCase().replace(/\.$/, "");
-    if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host === "metadata.google.internal" || host.endsWith(".metadata.google.internal") || host === "metadata" || host.indexOf(":") !== -1) {
-      // All IPv6 literals are excluded until an audited address-range policy exists.
-      return true;
-    }
-    var parts = host.split(".");
-    if (parts.length === 4 && parts.every(function (p) { return /^\d+$/.test(p); })) {
-      var a = Number(parts[0]), b = Number(parts[1]);
-      return a === 0 || a === 10 || a === 127 || a >= 224 || (a === 100 && b >= 64 && b <= 127) || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && (b === 168 || b === 0)) || (a === 198 && (b === 18 || b === 19));
-    }
-    return false;
-  }
   function normalizeUrl(input, base) {
     if (typeof input !== "string" || !input.trim()) return rejected("Enter a valid HTTP(S) URL.");
     try {
       var url = base === undefined ? new URL(input) : new URL(input, base);
       if (url.protocol !== "http:" && url.protocol !== "https:") return rejected("Only HTTP(S) URLs are supported.");
-      if (url.username || url.password || unsafeHost(url.hostname)) return rejected("Credentials and explicit local or private targets are not allowed.");
+      if (url.username || url.password) return rejected("URLs containing credentials are not allowed.");
       url.hash = "";
       return { ok: true, url: url.href };
     } catch (_) { return rejected("Enter a valid HTTP(S) URL."); }
@@ -82,7 +69,7 @@
     function fail(code, message) { return { ok: false, issue: { code: code, message: message } }; }
     if (!run || !Object.hasOwn(modes, run.mode) || !value || typeof value !== "object" || value.transport !== run.mode || !statuses.includes(value.status)) return fail("INPUT_MALFORMED", "Invalid acquisition result.");
     if (value.status === "not-readable" || value.status === "not-supported") return fail(value.issueCode && issueCodes.includes(value.issueCode) ? value.issueCode : "NETWORK_OR_POLICY_FAILURE", "No readable content was supplied.");
-    if (value.opaque === true || value.responseType === "opaque") return fail("OPAQUE_RESPONSE", "Opaque responses cannot provide content evidence.");
+    if (value.opaque === true || ["opaque", "opaqueredirect", "error"].includes(value.responseType)) return fail("OPAQUE_RESPONSE", "Opaque responses cannot provide content evidence.");
     var kinds = { "live-cors": ["html", "xml"], "html-import": ["html"], "xml-import": ["xml"], "csv-import": ["links"], "paste-import": ["html", "xml", "links"] };
     var expected = { html: "observed-html", xml: "sitemap-only", links: "imported-link" };
     if (!kinds[run.mode] || !kinds[run.mode].includes(value.contentKind) || value.evidenceClass !== expected[value.contentKind] || typeof value.payload !== "string" || (run.mode === "live-cors" ? !["readable", "partial"].includes(value.status) : !["user-supplied", "partial"].includes(value.status))) return fail("INPUT_MALFORMED", "Transport, status, content and evidence do not match.");

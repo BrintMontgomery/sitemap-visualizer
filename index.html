@@ -10,6 +10,7 @@
   <script src="js/csv-import.js" defer></script>
   <script src="js/xml-import.js" defer></script>
   <script src="js/html-import.js" defer></script>
+  <script src="js/fetch-adapter.js" defer></script>
   <script src="js/graph.js" defer></script>
   <script src="js/graph-renderer.js" defer></script>
   <script src="js/page-details.js" defer></script>
@@ -27,14 +28,15 @@
     <p class="header-note">Browser-only site mapping</p>
   </header>
 
-  <form id="run-form" aria-label="Analyze local sitemap data">
-<label>Input mode <select name="mode"><option value="csv-import">Links CSV — asserted hyperlinks</option><option value="xml-import">Sitemap XML — inventory only</option><option value="html-import">Saved HTML — links observed in file</option><option disabled>Live URL — retrieval not implemented</option><option disabled>Iframe bridge — no compatible provider</option><option disabled>JSONP — no approved provider</option><option disabled>Paste — not implemented</option></select></label>
+  <form id="run-form" aria-label="Analyze sitemap data">
+<label>Input mode <select name="mode"><option value="csv-import">Links CSV — asserted hyperlinks</option><option value="xml-import">Sitemap XML — inventory only</option><option value="html-import">Saved HTML — links observed in file</option><option value="live-cors">Live page — browser-readable HTML only</option><option disabled>Iframe bridge — no compatible provider</option><option disabled>JSONP — no approved provider</option><option disabled>Paste — not implemented</option></select></label>
 <label>Local file <input name="inputFile" type="file" required></label>
-<label>Root URL (required source URL for HTML) <input name="rootUrl" type="url" placeholder="https://example.org/"></label>
+<label>Root URL (required for live page or saved HTML) <input name="rootUrl" type="url" placeholder="https://example.org/"></label>
+<label data-live-option hidden>Request timeout (milliseconds) <input name="requestTimeoutMs" type="number" min="1" max="10000" value="10000" disabled></label>
 <label>Maximum pages <input name="maxPages" type="number" min="1" max="250" value="50" required></label>
 <label>Maximum depth <input name="maxDepth" type="number" min="0" max="4" value="2" required></label>
 <button type="submit">Analyze / New run</button><button id="cancel-run" type="button">Cancel</button><button id="reset-run" type="button">Reset</button>
-<p>Files stay in session memory. XML membership establishes no hyperlinks. Without a known root, link depth remains unknown.</p>
+<p>Live mode requests only the selected page; links are mapped without fetching their targets. HTTP(S) intranet and loopback hosts are allowed. The browser still controls CORS, mixed content and local-network permissions. Files stay in session memory. XML membership establishes no hyperlinks. Without a known root, link depth remains unknown.</p>
 <p id="run-status" role="status" aria-live="polite" data-state="queued">Ready for input.</p><p id="run-summary"></p>
 </form>
 <main id="main-content" class="app-layout">
@@ -108,7 +110,7 @@
       <p>Open this page directly in your browser. The application shell uses local files and needs no server or network connection to start.</p>
       <div class="info-divider"></div>
       <p class="info-caption">Current build</p>
-      <p class="build-note">Import local data, then drag, pin, pan, zoom, and fit the graph. Layout changes stay in this run. XML inventory alone establishes no links. Use the page list to inspect evidence and navigate included links with the keyboard. Live retrieval and exports are scheduled for later phases.</p>
+      <p class="build-note">Import local data, then drag, pin, pan, zoom, and fit the graph. Layout changes stay in this run. XML inventory alone establishes no links. Use the page list to inspect evidence and navigate included links with the keyboard. Live page mode retrieves one browser-readable HTML page. Automatic traversal and exports are scheduled for later phases.</p>
     </aside>
   </main>
 

@@ -4,8 +4,8 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 9 — complete; Phase 10 is next; Phases 1–9 are complete.
-* **Last green commit:** Phase 9 details and accessible page table; all 54 unit/integration/smoke tests and both Chromium file:// interaction checks pass. See `docs/page-inspection.md` for evidence and the focused accessibility review.
+* **Current phase:** Phase 10 — complete; Phase 11 is next; Phases 1–10 are complete.
+* **Last green commit:** Phase 10 bounded internal-network/CORS fetch adapter; all 69 unit/integration/smoke tests and four Chromium file:// browser checks pass. See `docs/fetch-adapter.md` for scope, policy revision and evidence.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
@@ -273,7 +273,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 10: Resilient internal network and CORS fetch adapter
+## [x] Phase 10: Resilient internal network and CORS fetch adapter
 *Enable internal network crawling and handle CORS boundaries gracefully without stalling execution. **Risk:** High — non-CORS readable responses or internal timeout delays can impact run efficiency if not handled asynchronously. **Thinking effort:** High (advanced model). **Depends on:** 2, 7.*
 
 ### 1. Objectives & Scope
@@ -281,14 +281,17 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** internal pages and reachable HTTP(S) endpoints are parsed when accessible; CORS-restricted or opaque responses are flagged cleanly without halting or slowing down the broader crawling run.
 
 ### 2. Implementation Checklist
-- [ ] Implement flexible `fetch` handling that gracefully intercepts CORS policy restrictions (e.g., handling cross-origin fetch failures and non-opaque fallbacks) so execution continues seamlessly.
-- [ ] Remove explicit private/loopback IP blocking rules to allow discovery and mapping across configured internal network ranges and local intranet hosts.
-- [ ] Implement configurable timeout and request abort mechanisms to ensure slow or non-responsive internal network nodes do not stall the crawler.
-- [ ] Streamline error categorization so CORS issues, transport drops, and timeouts log actionable status codes without throwing unhandled exceptions or blocking queued tasks.
-- [ ] Record observable final URLs, HTTP statuses, byte counts, request duration, and access issues while keeping graph processing resilient to endpoint failures.
+- [x] Implement flexible `fetch` handling that gracefully intercepts CORS policy restrictions (e.g., handling cross-origin fetch failures and non-opaque fallbacks) so execution continues seamlessly.
+- [x] Remove explicit private/loopback IP blocking rules to allow discovery and mapping across configured internal network ranges and local intranet hosts.
+- [x] Implement configurable timeout and request abort mechanisms to ensure slow or non-responsive internal network nodes do not stall the crawler.
+- [x] Streamline error categorization so CORS issues, transport drops, and timeouts log actionable status codes without throwing unhandled exceptions or blocking queued tasks.
+- [x] Record observable final URLs, HTTP statuses, byte counts, request duration, and access issues while keeping graph processing resilient to endpoint failures.
 
 ### 3. Testing & Verification
 * **Checks:** AT-22–24 and AT-37 updated with internal network targets, intranet fixtures, simulated CORS-denied endpoints, timeout handling, and high-concurrency internal crawl tests.
+- [x] All 69 unit/integration/smoke tests pass, including 15 new adapter/parser/graph regressions and a 40-request burst with concurrency/rate/cancellation/expiry checks.
+- [x] Actual Chromium file:// CORS allowed/denied, loopback, opaque, redirects, HTTP errors, size/time bounds, cancellation, replacement and local-import recovery pass; all three previous browser checks also pass.
+* **Decision:** The revised Phase 10 permits private/loopback/intranet HTTP(S) roots, superseding the earlier explicit-target exclusion in FR-062/NFR-001 and the Phase 2 contract. Browser policy and exact root-host scope remain binding. Only the selected HTML page is requested in the UI; queued explicit adapter calls are bounded, while automatic multi-page traversal and live sitemap parsing remain Phase 11. Generic browser fetch errors retain unknown cause; no CORS bypass is attempted. See `docs/fetch-adapter.md` for the interface, bounds, requirement deviation and version-specific browser evidence.
 * **Acceptance:** internal host links are mapped when accessible; CORS errors log transparently without halting the crawl process or freezing the UI.
 * **Commit point:** commit internal fetch adapter, resilient CORS handler, and test suite.
 

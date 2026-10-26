@@ -11,7 +11,7 @@
         !Number.isSafeInteger(file.size) || file.size < 0 || typeof file.text !== "function") return failure("INPUT_MALFORMED", "Select an HTML or HTM file.");
     // A filename, embedded <base>, or the application's file:// URL is not a trusted source mapping.
     var source = contracts.normalizeUrl(sourceUrl);
-    if (!source.ok) return failure("URL_REJECTED", "A public HTTP(S) source URL is required.");
+    if (!source.ok) return failure("URL_REJECTED", "An HTTP(S) source URL is required.");
     if (file.size > contracts.limits.maxBytes) return failure("SIZE_LIMIT", "File exceeds the byte limit.");
     var started = Date.now(), text;
     try { text = await file.text(); } catch (_) { return failure("INPUT_MALFORMED", "The selected file could not be read."); }
@@ -19,6 +19,14 @@
     var bytes = Math.max(file.size, new TextEncoder().encode(text).length);
     if (bytes > contracts.limits.maxBytes) return failure("SIZE_LIMIT", "File exceeds the byte limit.");
     if (Date.now() - started > contracts.limits.maxDurationMs) return failure("TIMEOUT", "HTML import exceeded the time limit.");
+    var parsed = parseHtml(text, source.url, file.name, "html-import");
+    if (!parsed.ok) return parsed;
+    var issues = parsed.issues;
+    var acquisition = contracts.validateResult(run, { transport: "html-import", status: issues.length ? "partial" : "user-supplied", contentKind: "html", evidenceClass: "observed-html", payload: text, bytesRead: bytes, inputReference: file.name, startedAt: new Date(started).toISOString(), elapsedMs: Date.now() - started, issues: Array.from(new Set(issues.map(function (issue) { return issue.code; }))) });
+    if (!acquisition.ok) return acquisition;
+    return Object.assign(parsed, { acquisition: acquisition });
+  }
+  function parseHtml(text, sourceUrl, inputReference, transport) {
     var fragment;
     try {
       // Template contents have a separate inert owner document. Unlike a detached
@@ -43,20 +51,26 @@
     if (fragment.querySelector("base[href]")) issues.push({ code: "INPUT_MALFORMED", message: "Embedded base URL ignored; supply the intended resolution base explicitly." });
     for (var i = 0; i < Math.min(anchors.length, contracts.limits.maxRecords); i++) {
       var href = anchors[i].getAttribute("href");
-      var target = contracts.normalizeUrl(href, source.url);
-      if (!target.ok) { issues.push({ code: "URL_REJECTED", anchor: i + 1, message: "Anchor must resolve to a public HTTP(S) URL." }); continue; }
-      var evidence = { transport: "html-import", inputReference: file.name, sourceUrl: source.url, anchor: i + 1, evidenceClass: "observed-html" };
+      var target = contracts.normalizeUrl(href, sourceUrl);
+      if (!target.ok) { issues.push({ code: "URL_REJECTED", anchor: i + 1, message: "Anchor must resolve to an HTTP(S) URL." }); continue; }
+      var evidence = { transport: transport, inputReference: inputReference, sourceUrl: sourceUrl, anchor: i + 1, evidenceClass: "observed-html" };
       if (seen.has(target.url)) seen.get(target.url).evidence.push(evidence);
       else {
-        var claim = { source: source.url, target: target.url, evidenceClass: "observed-html", evidence: [evidence] };
+        var claim = { source: sourceUrl, target: target.url, evidenceClass: "observed-html", evidence: [evidence] };
         seen.set(target.url, claim); claims.push(claim);
       }
     }
     if (truncated) issues.push({ code: "PARTIAL_LIMIT", message: "Anchor limit reached; remaining anchors were not imported." });
     var titleElement = fragment.querySelector("title"), title = titleElement ? titleElement.textContent.trim() : "";
-    var acquisition = contracts.validateResult(run, { transport: "html-import", status: issues.length ? "partial" : "user-supplied", contentKind: "html", evidenceClass: "observed-html", payload: text, bytesRead: bytes, inputReference: file.name, startedAt: new Date(started).toISOString(), elapsedMs: Date.now() - started, issues: Array.from(new Set(issues.map(function (issue) { return issue.code; }))) });
-    if (!acquisition.ok) return acquisition;
-    return { ok: true, acquisition: acquisition, page: { url: source.url, title: title, evidenceClass: "observed-html", inputReference: file.name }, claims: claims, issues: issues, truncated: truncated };
+    return { ok: true, page: { url: sourceUrl, title: title, evidenceClass: "observed-html", inputReference: inputReference, transport: transport }, claims: claims, issues: issues, truncated: truncated };
   }
-  return Object.freeze({ importFile: importFile });
+  function fromAcquisition(run, acquisition) {
+    if (!contracts.isValidatedResult(acquisition) || !run || run.mode !== "live-cors" || acquisition.result.transport !== "live-cors" || acquisition.result.contentKind !== "html") return failure("UNSUPPORTED_CONTENT", "A validated readable HTML response is required. For sitemap XML, use local import.");
+    var r = acquisition.result;
+    var parsed = parseHtml(r.payload, r.observedFinalUrl, r.inputReference, r.transport);
+    if (!parsed.ok) return parsed;
+    var checked = contracts.validateResult(run, Object.assign({}, r, { status: parsed.issues.length ? "partial" : r.status, issues: Array.from(new Set(r.issues.concat(parsed.issues.map(function (i) { return i.code; })))) }));
+    return checked.ok ? Object.assign(parsed, { acquisition: checked }) : checked;
+  }
+  return Object.freeze({ importFile: importFile, fromAcquisition: fromAcquisition });
 });

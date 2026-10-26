@@ -17,7 +17,7 @@ const source = "https://example.test/section/page.html";
 test("HTML import rejects invalid inputs without reading a selected file", async () => {
   let reads = 0;
   const f = { name: "page.html", size: 20, text: async () => { reads++; return ""; } };
-  for (const url of [undefined, "file:///etc/passwd", "http://127.0.0.1/"]) assert.equal((await html.importFile(f, run(), url)).issue.code, "URL_REJECTED");
+  for (const url of [undefined, "file:///etc/passwd", "http://user:pass@127.0.0.1/"]) assert.equal((await html.importFile(f, run(), url)).issue.code, "URL_REJECTED");
   assert.equal((await html.importFile({ ...f, name: "page.txt" }, run(), source)).issue.code, "INPUT_MALFORMED");
   assert.equal((await html.importFile({ ...f, size: contracts.limits.maxBytes + 1 }, run(), source)).issue.code, "SIZE_LIMIT");
   assert.equal(reads, 0);
@@ -26,11 +26,11 @@ test("HTML import rejects invalid inputs without reading a selected file", async
 test("relative links, entities, duplicates, provenance and title survive once", async () => {
   const r = await html.importFile(fixture("relative-page.html"), run(), source);
   assert.equal(r.ok, true); assert.equal(r.page.title, "Saved & linked");
-  assert.deepEqual(r.claims.map(c => c.target), ["https://example.test/about", "https://example.test/section/contact?x=1&y=2", "https://other.test/"]);
+  assert.deepEqual(r.claims.map(c => c.target), ["https://example.test/about", "https://example.test/section/contact?x=1&y=2", "https://other.test/", "http://127.0.0.1/"]);
   assert.equal(r.claims[0].evidence.length, 2);
   assert.deepEqual(r.claims[0].evidence[1], { transport: "html-import", inputReference: "relative-page.html", sourceUrl: source, anchor: 2, evidenceClass: "observed-html" });
   assert.equal(r.acquisition.result.httpStatus, null); assert.equal(r.acquisition.result.status, "partial");
-  assert.equal(r.issues.length, 2); assert.ok(r.claims.every(c => c.source === source && c.evidenceClass === "observed-html"));
+  assert.equal(r.issues.length, 1); assert.ok(r.claims.every(c => c.source === source && c.evidenceClass === "observed-html"));
 });
 test("hostile HTML remains inert and cannot substitute its embedded base", async () => {
   requests.length = 0;

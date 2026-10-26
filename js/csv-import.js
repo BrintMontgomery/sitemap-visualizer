@@ -51,7 +51,7 @@
       var row = rows[i];
       if (row.error || row.fields.length !== headers.length) { issues.push({ code: "INPUT_MALFORMED", row: row.row, message: row.error || "Column count does not match the header." }); continue; }
       var a = contracts.normalizeUrl(row.fields[source].trim()), b = contracts.normalizeUrl(row.fields[target].trim());
-      if (!a.ok || !b.ok) { issues.push({ code: "URL_REJECTED", row: row.row, message: "Source and target must be valid public HTTP(S) URLs." }); continue; }
+      if (!a.ok || !b.ok) { issues.push({ code: "URL_REJECTED", row: row.row, message: "Source and target must be valid HTTP(S) URLs." }); continue; }
       var key = JSON.stringify([a.url, b.url]), evidence = { transport: "csv-import", inputReference: file.name, row: row.row, evidenceClass: "imported-link" };
       if (seen.has(key)) seen.get(key).evidence.push(evidence);
       else { var claim = { source: a.url, target: b.url, evidenceClass: "imported-link", evidence: [evidence] }; seen.set(key, claim); claims.push(claim); }

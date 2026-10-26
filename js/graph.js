@@ -48,7 +48,7 @@
           totalBytes += a.result.bytesRead;
           var id = "acquisition-" + (acquisitions.length + 1); acquisitionIds.set(a, id);
           var r = a.result;
-          acquisitions.push({ id: id, transport: r.transport, inputReference: r.inputReference, evidenceClass: r.evidenceClass, status: r.status, startedAt: r.startedAt, bytesRead: r.bytesRead, sourceOrigin: r.sourceOrigin, observedFinalUrl: r.observedFinalUrl, httpStatus: r.httpStatus, redirectHistory: null, issues: r.issues.slice() });
+          acquisitions.push({ id: id, transport: r.transport, inputReference: r.inputReference, evidenceClass: r.evidenceClass, status: r.status, startedAt: r.startedAt, elapsedMs: r.elapsedMs, bytesRead: r.bytesRead, sourceOrigin: r.sourceOrigin, observedFinalUrl: r.observedFinalUrl, httpStatus: r.httpStatus, redirectHistory: null, issues: r.issues.slice() });
           if (r.status === "partial") issue("PARTIAL_LIMIT", "Acquisition reports partial coverage: " + r.inputReference);
           if (r.resourceUrl && r.observedFinalUrl && r.resourceUrl !== r.observedFinalUrl) {
             var key = JSON.stringify([r.resourceUrl, r.observedFinalUrl]);
@@ -71,7 +71,10 @@
       }
       if (batch.page && nextRecord()) {
         var p = batch.page, u = url(p.url), e = evidence(p, "observed-html");
-        if (u && e) { var n = page(u); if (typeof p.title === "string" && (n.title === null || compare(p.title, n.title) < 0)) n.title = p.title; addEvidence(n, e); }
+        if (u && e) { var n = page(u); if (typeof p.title === "string" && (n.title === null || compare(p.title, n.title) < 0)) n.title = p.title; addEvidence(n, e);
+          var fetched = local.find(function (a) { return a.result.transport === "live-cors" && a.result.observedFinalUrl === u; });
+          if (fetched) { n.fetched = true; n.httpStatus = fetched.result.httpStatus; }
+        }
         else issue("INPUT_MALFORMED", "Invalid page record or provenance.");
       }
       if (Array.isArray(batch.claims)) for (var claim of batch.claims) {

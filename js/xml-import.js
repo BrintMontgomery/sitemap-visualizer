@@ -74,7 +74,7 @@
         var locs = children(entry, "loc", namespace), mods = children(entry, "lastmod", namespace);
         if (locs.length !== 1 || locs[0].children.length || mods.length > 1 || (mods[0] && mods[0].children.length)) { localIssues.push({ code: "INPUT_MALFORMED", inputReference: item.file.name, message: "Entry requires one text-only loc and at most one text-only lastmod." }); continue; }
         var url = contracts.normalizeUrl(locs[0].textContent.trim());
-        if (!url.ok) { localIssues.push({ code: "URL_REJECTED", inputReference: item.file.name, message: "Entry contains an invalid public HTTP(S) URL." }); continue; }
+        if (!url.ok) { localIssues.push({ code: "URL_REJECTED", inputReference: item.file.name, message: "Entry contains an invalid HTTP(S) URL." }); continue; }
         var lastmod = mods.length ? mods[0].textContent.trim() : null;
         if (isIndex) localReferences.push({ url: url.url, sourceSitemap: item.sourceUrl, inputReference: item.file.name, lastmod: lastmod, resolved: map.has(url.url) });
         else localMemberships.push({ url: url.url, sourceSitemap: item.sourceUrl, inputReference: item.file.name, lastmod: lastmod, evidenceClass: "sitemap-only", depth: null });
