@@ -39,7 +39,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 | 5 | Local HTML import | 2 | Medium / simple model | Inert HTML links with base URL |
 | 6 | Graph construction and depth | 3–5 | Medium / simple model | Deterministic nodes, edges, provenance |
 | 7 | Run controls and input UI | 2, 6 | Low-Medium / simple model | Mode selection, limits, status, cancellation |
-| 8 | Graph rendering and layout | 6–7 | High / advanced model | Dark interactive graph and legend |
+| 8 | Graph rendering and layout | 6–7 | High / advanced model | White-canvas interactive graph and legend |
 | 9 | Details and accessible list | 6–8 | Medium / simple model | Keyboard inspection and link details |
 | 10 | CORS-readable fetch adapter | 2, 7 | High / advanced model | Bounded readable URL acquisition |
 | 11 | Robots-aware discovery | 6, 10 | Very High / advanced model | Bounded allowed HTML/sitemap traversal |
@@ -227,14 +227,14 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 ---
 
 ## [ ] Phase 8: Graph rendering and layout
-*Make the validated graph navigable on a dark canvas. **Risk:** High — dense layouts may be slow or misleading. **Thinking effort:** High (advanced model). **Depends on:** 6–7.*
+*Make the validated graph navigable on a white canvas. **Risk:** High — dense layouts may be slow or misleading. **Thinking effort:** High (advanced model). **Depends on:** 6–7.*
 
 ### 1. Objectives & Scope
 * **In scope:** one graph renderer, depth colors, legend, edge direction, drag/pin, pan, zoom, fit, layout reset.
 * **Done means:** the reference topology displays with orange root, green depth 1, purple depth 2, red depth 3+, and visible links.
 
 ### 2. Implementation Checklist
-- [ ] Render only validated graph nodes/edges on a dark SVG/canvas with a persistent legend and distinguish unknown depth.
+- [ ] Render only validated graph nodes/edges on a white SVG/canvas with a persistent legend and distinguish unknown depth.
 - [ ] Add drag/pin/unpin, zoom/pan/fit, and layout reset without changing graph identities.
 - [ ] Keep pinned positions in run-local `LayoutState`; dispose old simulations on new runs.
 - [ ] Use bounded layout work and fixtures near 250 nodes/1,000 edges for later performance gate.

@@ -324,7 +324,7 @@ Do not show `CORS blocked` as a definitive diagnosis unless independent evidence
 | :---- | :---- | :---- | :---- |
 | FR-017 | The application shall render one distinct node per normalized discovered page and a directed edge for each observed internal link between included pages. | P0 | OBS / ADV |
 | FR-018 | The graph shall display an **orange homepage**, **green depth 1**, **purple depth 2**, and **red depth 3+** nodes, with a persistent legend. | P0 | OBS |
-| FR-019 | By default, the graph shall use a dark, preferably black, canvas with contrasting nodes and light-colored edges as in the supplied example. | P0 | OBS |
+| FR-019 | By default, the graph shall use a white canvas with contrasting nodes and gray edges. Preserve the supplied example's node colors and clustered layout; the user's revised canvas preference supersedes its black background. | P0 | OBS |
 | FR-020 | The graph shall support pointer-based node dragging. A dragged node shall remain pinned until intentionally unpinned, reset, or replaced by a new run. | P0 | OBS / DES |
 | FR-021 | The graph shall support zoom in/out, pan, and **Fit to View** without losing page or edge identities. | P0 | ADV / DES |
 | FR-022 | Clicking or keyboard-selecting a node shall display page details, including URL, title if available, depth, status if available, and inbound/outbound link counts within the observed graph. | P0 | OBS / ADV / DES |
@@ -361,7 +361,7 @@ Do not show `CORS blocked` as a definitive diagnosis unless independent evidence
 | :---- | :---- | :---- |
 | Configuration | Website URL; local XML/CSV import; Max Depth; Max Pages; Visualize | Persistent, labeled controls with help text and input-source guidance. |
 | Job feedback | Progress, run status, page counts, warnings | Visible throughout a run; distinguish partial and failed outcomes. |
-| Graph viewport | Dark canvas; color-coded nodes; directional links | Pan, zoom, select, drag, fit, reset. |
+| Graph viewport | White canvas; color-coded nodes; directional links | Pan, zoom, select, drag, fit, reset. |
 | Legend | Homepage / depth 1 / depth 2 / depth 3+ | Remains visible and color/shape accessible. |
 | Details | Selected URL, depth, title, status, inbound/outbound links | Display on selection; dismiss or change selection. |
 | Results/export | Counts, coverage note, PNG, CSV | Available following a usable run. |
@@ -568,7 +568,7 @@ These are examples of explicit package/version paths, **not already validated re
 | AT-06 | Analyze duplicate links, fragments, and redirects in a readable fixture or local import | URLs deduplicated; distinct page-level edges counted once; only observable redirect metadata asserted. | FR-010, FR-015 |
 | AT-07 | Import valid local `urlset` and `sitemapindex` XML data, including a sitemap-only URL | Sitemap membership visible separately; no fabricated HTML link or click depth. | FR-008–009, FR-028–029, FR-037 |
 | AT-08 | Inspect and drag a node | Details show correct metadata; node remains pinned; zoom/pan/fit functions work. | FR-020–023 |
-| AT-09 | Load supplied screenshot's approximate topology as test fixture | Orange central root, green hub nodes, purple leaves, thin visible edges on dark canvas. | FR-017–019 |
+| AT-09 | Load supplied screenshot's approximate topology as test fixture | Orange central root, green hub nodes, purple leaves, thin visible gray edges on white canvas. | FR-017–019 |
 | AT-10 | Export after a completed run | PNG captures current graph; pages/links CSVs have headers, stable IDs, and correctly quoted values. | FR-030–032 |
 | AT-11 | Test orphan logic with a sitemap-only unlinked page | Page flagged as **candidate orphan**; no claim of globally proven orphan status. | FR-028–029 |
 | AT-12 | Target a CORS-blocked site, robots-blocked path, or timed-out request | Clear access/partiality message and local-import guidance; no silent empty canvas and no CORS bypass. | FR-033–036, FR-040, NFR-011, NFR-020 |
@@ -604,7 +604,7 @@ These are examples of explicit package/version paths, **not already validated re
 | Phase | Scope | Exit criterion |
 | :---- | :---- | :---- |
 | 1. Static JavaScript foundation | `file://` launch; bundled dependencies with optional pinned CDN; client-side URL validation; local CSV/HTML import; provenance and edge/depth computation. | AT-02–06, AT-13, AT-16–18, AT-21, AT-31, and AT-35 pass on local fixtures. |
-| 2. Interactive MVP | URL/import input, bounded `fetch` transport, status/error classification, dark graph, legend, drag/zoom/pan/fit, and CORS-access guidance. | AT-01, AT-03, AT-08, AT-09, AT-12, AT-20, and AT-22–24 pass. |
+| 2. Interactive MVP | URL/import input, bounded `fetch` transport, status/error classification, white-canvas graph, legend, drag/zoom/pan/fit, and CORS-access guidance. | AT-01, AT-03, AT-08, AT-09, AT-12, AT-20, and AT-22–24 pass. |
 | 3. Data completeness and export | XML and multi-file import; browser-permitted discovery; candidate orphan analysis; PNG/CSV; optional XHR and cooperative bridge, with explicit partiality. | AT-07, AT-10, AT-11, AT-15, AT-17, AT-25–28, and AT-33–34 pass (bridge tests when bridge feature is enabled). |
 | 4. Hardening and release | Accessibility/performance, local-only privacy, pinned dependencies, threat tests, cross-browser `file://` QA, and network inspection; optional allowlisted JSONP validation if enabled. | P0 release gate and AT-19, AT-29, AT-35–37 pass; if shipped, JSONP passes AT-30; NFR evidence recorded. |
 
@@ -656,7 +656,7 @@ These are examples of explicit package/version paths, **not already validated re
 
 **Interactive inspection:** On 26 October 2026, a browser session observed the default Max Depth **2**, Max Pages **50**, a Website URL input with https://example.com placeholder, a **Visualize** button, an empty-result prompt, and a Cloudflare human-verification container. An attempted example.com visualization with depth 2 and page cap 10 produced neither a graph nor visible error. Export controls and post-result details could not be verified in that session. This is **not evidence that the reference app never works**.
 
-**Visual reference:** User-supplied image sitemap-graph.png (842 × 600 pixels), illustrating a black-background graph with an orange central root, green first-level hub nodes, purple second-level leaf nodes, and light link lines. It supports appearance requirements but does not establish data rules or the presence of specific buttons.
+**Visual reference:** User-supplied image sitemap-graph.png (842 × 600 pixels), illustrating a black-background graph with an orange central root, green first-level hub nodes, purple second-level leaf nodes, and light link lines. The user subsequently selected a white canvas while retaining the other styling. Use gray link lines with adequate contrast on white. The image supports the remaining appearance requirements but does not establish data rules or the presence of specific buttons.
 
 **Useful standards / technical references:**
 
