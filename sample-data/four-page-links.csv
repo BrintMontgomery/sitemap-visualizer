@@ -1,0 +1,5 @@
+source,target
+https://example.test/,https://example.test/about
+https://example.test/,https://example.test/contact
+https://example.test/about,https://example.test/team
+https://example.test/contact,https://example.test/team

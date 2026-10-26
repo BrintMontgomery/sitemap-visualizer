@@ -4,12 +4,12 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 1 — not started.
-* **Last green commit:** none established; the repository has no test suite or working visualizer yet.
+* **Current phase:** Phase 2 — not started; Phase 1 is complete.
+* **Last green commit:** Phase 1 static-package smoke checks pass; the interactive visualizer remains unimplemented.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
-The repository currently displays a test page (`index.html:12`, the placeholder heading) and confirms script loading (`js/app.bundle.js:4`, the script status lookup). It does not yet import source data, build a graph, crawl permitted pages, or export results. The goal is a static package that opens under `file://` and gives a site analyst an honest map of what the browser or imported files actually establish. Live coverage is bounded by CORS and readable site policy; XML inventory alone cannot prove links or click depth.
+The repository now displays a semantic static application shell from `index.html`, with local CSS, a deferred classic script, an empty state, and a development smoke suite. It does not yet import source data, build a graph, crawl permitted pages, or export results. The goal is a static package that opens under `file://` and gives a site analyst an honest map of what the browser or imported files actually establish. Live coverage is bounded by CORS and readable site policy; XML inventory alone cannot prove links or click depth.
 
 ### Design rationale
 Build the reliable offline path before live acquisition. All modes feed one validated evidence model, so a blocked fetch cannot be mistaken for content and sitemap membership cannot become an invented hyperlink. Use one locally bundled graph library (or a documented native alternative), locally available CSV parsing, and classic scripts or a prebuilt bundle. An HTTPS CDN can be optional after pinned bytes, license, SRI, and offline fallback are verified. Revisit the library choice only if the 250-node/1,000-edge target or `file://` browser checks fail. Development tools and fixture servers may run during verification; the delivered application has no runtime server, proxy, extension, service worker, or remote telemetry.
@@ -78,7 +78,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 1: Static package and development checks
+## [x] Phase 1: Static package and development checks
 *Establish the direct-file runtime and a small development verification harness. **Risk:** Low — an optional CDN could accidentally become a boot dependency. **Thinking effort:** Low (simple model). **Depends on:** none.*
 
 ### 1. Objectives & Scope
@@ -86,14 +86,16 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** opening `index.html` directly shows an application shell with no network; an offline smoke check runs.
 
 ### 2. Implementation Checklist
-- [ ] Replace placeholder markup with semantic regions and an empty-state shell.
-- [ ] Choose one graph library and CSV parser or documented native equivalents; pin, verify, and bundle every core runtime byte locally. Record versions, licenses, hashes, and optional CDN/SRI policy in `THIRD_PARTY_NOTICES.md`.
-- [ ] Make classic-script order and local relative paths deterministic; create minimal offline fixtures and a development-only test harness without a runtime server dependency.
-- [ ] Document `file://` launch in `README.md`.
+- [x] Replace placeholder markup with semantic regions and an empty-state shell.
+- [x] Choose one graph library and CSV parser or documented native equivalents; pin, verify, and bundle every core runtime byte locally. Record versions, licenses, hashes, and optional CDN/SRI policy in `THIRD_PARTY_NOTICES.md`.
+- [x] Make classic-script order and local relative paths deterministic; create minimal offline fixtures and a development-only test harness without a runtime server dependency.
+- [x] Document `file://` launch in `README.md`.
 
 ### 3. Testing & Verification
-* **Checks:** AT-16–18, AT-35 smoke; inspect network for no required CDN request. A later phase repeats interaction/export checks.
-* **Acceptance:** shell loads offline by double-click and the development smoke command is green.
+- [x] `npm test` passes five built-in smoke tests for local file paths, the accessible empty state, classic-script readiness, fixture consistency, and runtime dependency inventory.
+- [x] Asset audit confirms no remote script, stylesheet, package dependency, or required CDN request at startup.
+* **Checks:** source-level AT-16 direct-file startup checks and the no-required-CDN startup smoke for AT-18/AT-35. Full browser, import, graph, and export cases remain with their later feature phases and the Phase 19 release gate.
+* **Acceptance:** local relative assets resolve from a `file://` entry point, and the shell script reaches its ready state without a server or network dependency.
 * **Commit point:** commit the shell, asset inventory, fixture, and check together.
 
 ---

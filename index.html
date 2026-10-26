@@ -3,16 +3,63 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Create sitemap-visualizer</title>
+  <meta name="color-scheme" content="dark">
+  <title>Sitemap Visualizer</title>
   <link rel="stylesheet" href="css/styles.css">
   <script src="js/app.bundle.js" defer></script>
 </head>
 <body>
-  <main>
-    <h1>xCreate the sitemap-visualizer folder</h1>
-    <p>This is only a test.</p>
-    <pre><code>here is a test code area.</code></pre>
-    <p id="script-status" role="status">Loading JavaScript…</p>
+  <header class="app-header">
+    <a class="brand" href="#main-content" aria-label="Sitemap Visualizer home">
+      <span class="brand-mark" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+      <span>Sitemap Visualizer</span>
+    </a>
+    <p class="header-note">Browser-only site mapping</p>
+  </header>
+
+  <main id="main-content" class="app-layout">
+    <section class="map-panel" aria-labelledby="map-title">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">SITE STRUCTURE</p>
+          <h1 id="map-title">Sitemap</h1>
+        </div>
+        <span class="state-badge">Awaiting input</span>
+      </div>
+
+      <div id="empty-state" class="empty-state" role="region" aria-labelledby="empty-state-title">
+        <svg class="empty-state-icon" viewBox="0 0 80 64" aria-hidden="true" focusable="false">
+          <path d="M40 13v14M20 47V35h40v12M40 27H20v8m20-8h20v8" />
+          <circle cx="40" cy="10" r="6" />
+          <circle cx="20" cy="51" r="6" />
+          <circle cx="60" cy="51" r="6" />
+          <circle cx="40" cy="30" r="6" />
+        </svg>
+        <h2 id="empty-state-title">No pages to display</h2>
+        <p>This offline application shell is ready for the next build phase.</p>
+        <p class="empty-state-detail">Import and analysis controls will be added in later phases.</p>
+      </div>
+
+      <p id="application-status" class="visually-hidden" role="status" aria-live="polite">
+        Starting application.
+      </p>
+    </section>
+
+    <aside class="info-panel" aria-labelledby="about-title">
+      <p class="eyebrow">ABOUT THIS TOOL</p>
+      <h2 id="about-title">A local workspace for site structure</h2>
+      <p>Open this page directly in your browser. The application shell uses local files and needs no server or network connection to start.</p>
+      <div class="info-divider"></div>
+      <p class="info-caption">Current build</p>
+      <p class="build-note">The empty state is in place. File import, analysis, and graph features are scheduled for later phases.</p>
+    </aside>
   </main>
+
+  <footer class="app-footer">
+    <span>Static browser application</span>
+    <span>Core assets load from this folder</span>
+  </footer>
 </body>
 </html>
