@@ -1,0 +1,103 @@
+(function (root, factory) {
+  "use strict";
+  var api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  else root.SitemapContracts = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+
+  var modes = Object.freeze({
+    "live-cors": "Live retrieval is not implemented yet.",
+    "iframe-bridge": "No compatible bridge is configured.",
+    "jsonp-provider": "No approved provider is configured.",
+    "xml-import": "XML import is not implemented yet.",
+    "csv-import": "CSV import is not implemented yet.",
+    "html-import": "HTML import is not implemented yet.",
+    "paste-import": "Paste import is not implemented yet."
+  });
+  var statuses = Object.freeze(["readable", "partial", "user-supplied", "not-readable", "not-supported"]);
+  var evidenceClasses = Object.freeze(["observed-html", "imported-link", "sitemap-only", "bridge-reported", "jsonp-reported"]);
+  var issueCodes = Object.freeze(["NETWORK_OR_POLICY_FAILURE", "TIMEOUT", "CANCELLED", "HTTP_ERROR", "OPAQUE_RESPONSE", "UNSUPPORTED_CONTENT", "SIZE_LIMIT", "ROBOTS_UNAVAILABLE", "ROBOTS_EXCLUDED", "BRIDGE_UNAVAILABLE", "BRIDGE_TIMEOUT", "BRIDGE_MESSAGE_REJECTED", "JSONP_DISABLED", "JSONP_SCRIPT_ERROR", "JSONP_TIMEOUT", "INPUT_MALFORMED", "PARTIAL_LIMIT", "URL_REJECTED", "SCOPE_EXCLUDED"]);
+  var limits = Object.freeze({ maxBytes: 2000000, maxTotalBytes: 10000000, maxPages: 250, maxDepth: 4, maxDurationMs: 30000, requestTimeoutMs: 10000, maxConcurrency: 2, minHostIntervalMs: 1000, maxRedirects: 5, maxRecords: 10000, maxElements: 20000, maxNesting: 64 });
+  var defaults = Object.freeze({ maxPages: 50, maxDepth: 2 });
+
+  function rejected(message) { return { ok: false, issue: { code: "URL_REJECTED", message: message } }; }
+  function unsafeHost(host) {
+    host = host.toLowerCase().replace(/\.$/, "");
+    if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host === "metadata.google.internal" || host.endsWith(".metadata.google.internal") || host === "metadata" || host.indexOf(":") !== -1) {
+      // All IPv6 literals are excluded until an audited address-range policy exists.
+      return true;
+    }
+    var parts = host.split(".");
+    if (parts.length === 4 && parts.every(function (p) { return /^\d+$/.test(p); })) {
+      var a = Number(parts[0]), b = Number(parts[1]);
+      return a === 0 || a === 10 || a === 127 || a >= 224 || (a === 100 && b >= 64 && b <= 127) || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && (b === 168 || b === 0)) || (a === 198 && (b === 18 || b === 19));
+    }
+    return false;
+  }
+  function normalizeUrl(input, base) {
+    if (typeof input !== "string" || !input.trim()) return rejected("Enter a valid HTTP(S) URL.");
+    try {
+      var url = base === undefined ? new URL(input) : new URL(input, base);
+      if (url.protocol !== "http:" && url.protocol !== "https:") return rejected("Only HTTP(S) URLs are supported.");
+      if (url.username || url.password || unsafeHost(url.hostname)) return rejected("Credentials and explicit local or private targets are not allowed.");
+      url.hash = "";
+      return { ok: true, url: url.href };
+    } catch (_) { return rejected("Enter a valid HTTP(S) URL."); }
+  }
+  function inScope(url, rootUrl) {
+    var a = normalizeUrl(url), b = normalizeUrl(rootUrl);
+    return a.ok && b.ok && new URL(a.url).hostname.replace(/\.$/, "") === new URL(b.url).hostname.replace(/\.$/, "");
+  }
+  function uniqueUrls(values, base) {
+    var seen = new Set(), urls = [], issues = [];
+    values.forEach(function (value) { var result = normalizeUrl(value, base); if (!result.ok) issues.push(result.issue); else if (!seen.has(result.url)) { seen.add(result.url); urls.push(result.url); } });
+    return { urls: urls, issues: issues };
+  }
+  function createRun(options) {
+    if (!options || !Object.hasOwn(modes, options.mode)) throw new TypeError("Unknown acquisition mode");
+    var pages = options.maxPages === undefined ? defaults.maxPages : options.maxPages;
+    var depth = options.maxDepth === undefined ? defaults.maxDepth : options.maxDepth;
+    if (!Number.isInteger(pages) || pages < 1 || pages > limits.maxPages || !Number.isInteger(depth) || depth < 0 || depth > limits.maxDepth) throw new RangeError("Invalid run limits");
+    var rootUrl = null;
+    if (options.rootUrl != null) { var result = normalizeUrl(options.rootUrl); if (!result.ok) throw new TypeError(result.issue.message); rootUrl = result.url; }
+    return Object.freeze({ mode: options.mode, rootUrl: rootUrl, maxPages: pages, maxDepth: depth, startedAt: new Date().toISOString(), status: "queued", truncated: false });
+  }
+  var validated = new WeakMap();
+  function createBudget(run) {
+    if (!run || !Number.isInteger(run.maxPages)) throw new TypeError("Run required");
+    var bytes = 0, pages = new Set(), used = new WeakSet();
+    return Object.freeze({
+      accept: function (result, pageUrls) {
+        if (!result || validated.get(result) !== run || used.has(result) || !Array.isArray(pageUrls) || pageUrls.length > limits.maxRecords) return false;
+        var next = new Set(pages);
+        for (var i = 0; i < pageUrls.length; i++) { var url = normalizeUrl(pageUrls[i]); if (!url.ok) return false; next.add(url.url); }
+        if (next.size > run.maxPages || bytes + result.result.bytesRead > limits.maxTotalBytes) return false;
+        bytes += result.result.bytesRead; pages = next; used.add(result); return true;
+      },
+      snapshot: function () { return Object.freeze({ bytes: bytes, pages: pages.size }); }
+    });
+  }
+  function validateResult(run, value) {
+    function fail(code, message) { return { ok: false, issue: { code: code, message: message } }; }
+    if (!run || !Object.hasOwn(modes, run.mode) || !value || typeof value !== "object" || value.transport !== run.mode || !statuses.includes(value.status)) return fail("INPUT_MALFORMED", "Invalid acquisition result.");
+    if (value.status === "not-readable" || value.status === "not-supported") return fail(value.issueCode && issueCodes.includes(value.issueCode) ? value.issueCode : "NETWORK_OR_POLICY_FAILURE", "No readable content was supplied.");
+    if (value.opaque === true || value.responseType === "opaque") return fail("OPAQUE_RESPONSE", "Opaque responses cannot provide content evidence.");
+    var kinds = { "live-cors": ["html", "xml"], "html-import": ["html"], "xml-import": ["xml"], "csv-import": ["links"], "paste-import": ["html", "xml", "links"] };
+    var expected = { html: "observed-html", xml: "sitemap-only", links: "imported-link" };
+    if (!kinds[run.mode] || !kinds[run.mode].includes(value.contentKind) || value.evidenceClass !== expected[value.contentKind] || typeof value.payload !== "string" || (run.mode === "live-cors" ? !["readable", "partial"].includes(value.status) : !["user-supplied", "partial"].includes(value.status))) return fail("INPUT_MALFORMED", "Transport, status, content and evidence do not match.");
+    var actualBytes = new TextEncoder().encode(value.payload).length;
+    if (!Number.isSafeInteger(value.bytesRead) || value.bytesRead < actualBytes || value.bytesRead > limits.maxBytes || actualBytes > limits.maxBytes) return fail("SIZE_LIMIT", "Content exceeds the byte budget or has an invalid byte count.");
+    if (!Array.isArray(value.issues) || value.issues.some(function (i) { return typeof i !== "string" || !issueCodes.includes(i); })) return fail("INPUT_MALFORMED", "Invalid issue codes.");
+    if (typeof value.inputReference !== "string" || !value.inputReference || typeof value.startedAt !== "string" || !Number.isFinite(Date.parse(value.startedAt)) || !Number.isFinite(value.elapsedMs) || value.elapsedMs < 0 || value.elapsedMs > limits.maxDurationMs) return fail("INPUT_MALFORMED", "Invalid provenance or timing.");
+    var requested = null, finalUrl = null;
+    if (run.mode === "live-cors") {
+      requested = normalizeUrl(value.resourceUrl); finalUrl = normalizeUrl(value.observedFinalUrl);
+      if (!requested.ok || !finalUrl.ok || !run.rootUrl || !inScope(requested.url, run.rootUrl) || !inScope(finalUrl.url, run.rootUrl)) return fail("SCOPE_EXCLUDED", "Requested or observable final URL is invalid or outside the run scope.");
+      if (!Number.isInteger(value.httpStatus) || value.httpStatus < 200 || value.httpStatus > 299) return fail("HTTP_ERROR", "A successful observable HTTP status is required.");
+    } else if (value.resourceUrl != null || value.observedFinalUrl != null || value.httpStatus != null) return fail("INPUT_MALFORMED", "Imports cannot claim network response metadata.");
+    var accepted = { ok: true, result: Object.freeze({ transport: run.mode, status: value.status, contentKind: value.contentKind, evidenceClass: value.evidenceClass, payload: value.payload, inputReference: value.inputReference, resourceUrl: requested ? requested.url : null, observedFinalUrl: finalUrl ? finalUrl.url : null, sourceOrigin: requested ? new URL(requested.url).origin : null, httpStatus: requested ? value.httpStatus : null, redirectHistory: null, startedAt: value.startedAt, elapsedMs: value.elapsedMs, bytesRead: value.bytesRead, issues: Object.freeze(value.issues.slice()) }) };
+    Object.freeze(accepted); validated.set(accepted, run); return accepted;
+  }
+  return Object.freeze({ modes: modes, statuses: statuses, evidenceClasses: evidenceClasses, issueCodes: issueCodes, limits: limits, defaults: defaults, normalizeUrl: normalizeUrl, inScope: inScope, uniqueUrls: uniqueUrls, createRun: createRun, createBudget: createBudget, validateResult: validateResult });
+});

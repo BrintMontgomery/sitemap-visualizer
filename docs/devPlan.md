@@ -4,8 +4,8 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 2 — not started; Phase 1 is complete.
-* **Last green commit:** Phase 1 static-package smoke checks pass; the interactive visualizer remains unimplemented.
+* **Current phase:** Phase 3 — not started; Phases 1–2 are complete.
+* **Last green commit:** Phase 2 contract and URL-policy checks pass; the interactive visualizer remains unimplemented.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
@@ -100,7 +100,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 2: Run contracts and URL policy
+## [x] Phase 2: Run contracts and URL policy
 *Define one data boundary before adding inputs. **Risk:** Medium — ambiguous provenance or URL scope could contaminate every graph. **Thinking effort:** Medium (simple model). **Depends on:** 1.*
 
 ### 1. Objectives & Scope
@@ -108,13 +108,14 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** unsupported schemes and explicit private/loopback targets are rejected, and adapters cannot mutate graph state.
 
 ### 2. Implementation Checklist
-- [ ] Define all acquisition modes, discriminated result statuses, evidence classes, issue codes, and fixed byte/page/depth/time budgets from §7.4; mark unsupported modes unavailable.
-- [ ] Implement canonical URL resolution, fragment/default-port removal, deduplication, scope checks, and explicit URL/host rejection without claiming DNS or hidden redirect insight.
-- [ ] Centralize evidence validation, resource budgets, run metadata, and observable-versus-unknown fields; use text-only rendering contracts.
-- [ ] Add focused tests for invalid URL, normalization, budget rejection, and spoofed adapter data.
+- [x] Define all acquisition modes, discriminated result statuses, evidence classes, issue codes, and fixed byte/page/depth/time budgets from §7.4; mark unsupported modes unavailable.
+- [x] Implement canonical URL resolution, fragment/default-port removal, deduplication, scope checks, and explicit URL/host rejection without claiming DNS or hidden redirect insight.
+- [x] Centralize evidence validation, resource budgets, run metadata, and observable-versus-unknown fields; use text-only rendering contracts.
+- [x] Add focused tests for invalid URL, normalization, budget rejection, and spoofed adapter data.
 
 ### 3. Testing & Verification
-* **Checks:** AT-02, AT-06, AT-13, AT-24; issue codes and rejected results have no graph effect.
+* **Checks:** AT-02, AT-06, AT-13 and AT-24 covered at contract level; issue codes and rejected results have no graph effect. Browser network execution remains for later phases.
+* **Decision:** Initial resource limits and conservative IPv6 policy are documented in `docs/run-contract.md`; no adapter is enabled before its implementation and validation.
 * **Acceptance:** one documented validated result shape is usable by every later adapter.
 * **Commit point:** commit contract, implementation, and tests.
 
