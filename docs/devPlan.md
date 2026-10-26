@@ -4,8 +4,8 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 7 — complete; Phase 8 is next; Phases 1–7 are complete.
-* **Last green commit:** Phase 7 local input/run controls and all 40 unit/integration/smoke tests pass; the interactive visualizer remains unimplemented. See `docs/graph.md` for graph semantics and limits.
+* **Current phase:** Phase 8 — complete; Phase 9 is next; Phases 1–8 are complete.
+* **Last green commit:** Phase 8 native SVG rendering and layout; all 46 unit/integration/smoke tests and the Chromium file:// interaction check pass. See `docs/graph-rendering.md` for evidence and remaining release boundaries.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
@@ -226,7 +226,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 8: Graph rendering and layout
+## [x] Phase 8: Graph rendering and layout
 *Make the validated graph navigable on a white canvas. **Risk:** High — dense layouts may be slow or misleading. **Thinking effort:** High (advanced model). **Depends on:** 6–7.*
 
 ### 1. Objectives & Scope
@@ -234,13 +234,17 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** the reference topology displays with orange root, green depth 1, purple depth 2, red depth 3+, and visible links.
 
 ### 2. Implementation Checklist
-- [ ] Render only validated graph nodes/edges on a white SVG/canvas with a persistent legend and distinguish unknown depth.
-- [ ] Add drag/pin/unpin, zoom/pan/fit, and layout reset without changing graph identities.
-- [ ] Keep pinned positions in run-local `LayoutState`; dispose old simulations on new runs.
-- [ ] Use bounded layout work and fixtures near 250 nodes/1,000 edges for later performance gate.
+- [x] Render only validated graph nodes/edges on a white SVG/canvas with a persistent legend and distinguish unknown depth.
+- [x] Add drag/pin/unpin, zoom/pan/fit, and layout reset without changing graph identities.
+- [x] Keep pinned positions in run-local `LayoutState`; dispose old simulations on new runs.
+- [x] Use bounded layout work and fixtures near 250 nodes/1,000 edges for later performance gate.
 
 ### 3. Testing & Verification
-* **Checks:** AT-08–09; browser interaction and screenshot review for colors, topology, and legibility.
+* **Checks:** Phase 8 portions of AT-08–09; Chromium file:// pointer interactions and screenshot review pass. Details remain Phase 9. See `docs/graph-rendering.md`.
+- [x] All 46 unit/integration/smoke tests pass, including six renderer regression tests for identities, safe text, unknown depth, pins, reset, disposal, stale results, and dense/empty graphs.
+- [x] Browser drag/pin/unpin, pointer cancellation, pan, wheel/button zoom, fit, reset, replacement, and 768 px viewport checks pass; zero remote requests with a working observation control.
+- [x] Exact 250-node/1,000-edge fixture passes finite-position/count and preliminary responsiveness checks; full release benchmarking remains Phase 19.
+* **Decision:** Use deterministic bounded native SVG layout with no background simulation. Unknown-depth nodes use a separate dashed-gray grid; no positioning tree becomes evidence. `LayoutState` is run-local and immutable to consumers; old renderer listeners/content are disposed on replacement/reset.
 * **Acceptance:** user can manipulate graph without losing records or freezing a normal desktop.
 * **Commit point:** commit renderer and interaction checks.
 

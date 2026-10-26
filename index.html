@@ -11,6 +11,7 @@
   <script src="js/xml-import.js" defer></script>
   <script src="js/html-import.js" defer></script>
   <script src="js/graph.js" defer></script>
+  <script src="js/graph-renderer.js" defer></script>
   <script src="js/app.bundle.js" defer></script>
   <script src="js/run-controls.js" defer></script>
 </head>
@@ -42,7 +43,27 @@
           <p class="eyebrow">SITE STRUCTURE</p>
           <h1 id="map-title">Sitemap</h1>
         </div>
-        <span class="state-badge">Awaiting input</span>
+        <span id="graph-count" class="state-badge">Awaiting input</span>
+      </div>
+
+      <ul class="graph-legend" aria-label="Graph depth legend">
+        <li><span class="legend-dot depth-root"></span>Root · depth 0</li>
+        <li><span class="legend-dot depth-one"></span>Depth 1</li>
+        <li><span class="legend-dot depth-two"></span>Depth 2</li>
+        <li><span class="legend-dot depth-deep"></span>Depth 3+</li>
+        <li><span class="legend-dot depth-unknown"></span>Unknown depth</li>
+      </ul>
+      <div id="graph-view" hidden>
+        <div class="graph-toolbar" role="group" aria-label="Graph layout controls">
+          <button type="button" data-action="zoom-in" disabled>Zoom in</button>
+          <button type="button" data-action="zoom-out" disabled>Zoom out</button>
+          <button type="button" data-action="fit" disabled>Fit to view</button>
+          <button type="button" data-action="reset" disabled>Reset layout</button>
+          <button type="button" data-action="unpin" disabled>Unpin selected</button>
+        </div>
+        <svg id="graph-canvas" viewBox="0 0 1000 700" role="group" aria-label="Directed sitemap graph" aria-describedby="graph-help"></svg>
+        <p id="graph-help" class="graph-help">Arrows point to link targets. Drag nodes to pin; drag the canvas to pan. Double-click a node or use Unpin selected to release it. Gray dashed nodes have unknown depth.</p>
+        <p class="layout-status" role="status" aria-live="polite"></p>
       </div>
 
       <div id="empty-state" class="empty-state" role="region" aria-labelledby="empty-state-title">
@@ -54,8 +75,8 @@
           <circle cx="40" cy="30" r="6" />
         </svg>
         <h2 id="empty-state-title">No pages to display</h2>
-        <p>This offline application shell is ready for the next build phase.</p>
-        <p class="empty-state-detail">Import and analysis controls will be added in later phases.</p>
+        <p>Import a links CSV, sitemap XML, or saved HTML file above to display its graph.</p>
+        <p class="empty-state-detail">Set a known root URL to calculate directed link depth.</p>
       </div>
 
       <p id="application-status" class="visually-hidden" role="status" aria-live="polite">
@@ -69,7 +90,7 @@
       <p>Open this page directly in your browser. The application shell uses local files and needs no server or network connection to start.</p>
       <div class="info-divider"></div>
       <p class="info-caption">Current build</p>
-      <p class="build-note">The empty state is in place. File import, analysis, and graph features are scheduled for later phases.</p>
+      <p class="build-note">Import local data, then drag, pin, pan, zoom, and fit the graph. Layout changes stay in this run. XML inventory alone establishes no links. Details, live retrieval, and exports are scheduled for later phases.</p>
     </aside>
   </main>
 

@@ -4,9 +4,9 @@ A browser-only sitemap visualizer, developed in small, testable phases.
 
 ## Open the application
 
-Open `index.html` directly in Chrome, Edge, or Firefox. This phase provides the static application shell and empty state. It requires no local server, application backend, installation, account, or network connection at startup.
+Open `index.html` directly in Chrome, Edge, or Firefox. Import a local links CSV, sitemap XML, or saved HTML file, then explore the graph on its white canvas. It requires no local server, application backend, installation, account, or network connection at startup.
 
-Import, analysis, graph interaction, and export features will be added in later phases.
+Set a known root URL for depth colors. Drag nodes to pin them; drag the canvas to pan; use zoom, fit, unpin, and reset controls. See `docs/graph-rendering.md` for controls, evidence semantics, fixtures, and browser checks. Details, live retrieval, and exports remain later phases.
 
 ## Development checks
 
@@ -24,5 +24,5 @@ The tests use Node's built-in test runner and the development-only jsdom package
 - `index.html` — direct-file application entry point
 - `css/styles.css` — local interface styles
 - `js/app.bundle.js` — deferred classic-script entry point
-- `sample-data/` — offline fixtures for later import phases
+- `sample-data/` — offline import and graph fixtures
 - `THIRD_PARTY_NOTICES.md` — runtime dependency and CDN policy

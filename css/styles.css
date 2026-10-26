@@ -301,3 +301,32 @@ a {
     }
   }
 }
+
+/* SVG is a local native renderer; graph coordinates never mutate evidence. */
+[hidden] { display: none !important; }
+.graph-toolbar button { font: inherit; padding: 0.5rem 0.7rem; border: 1px solid #536174; border-radius: 0.35rem; cursor: pointer; }
+.graph-toolbar button:disabled { opacity: 0.5; cursor: default; }
+.graph-legend { display: flex; flex-wrap: wrap; gap: 0.65rem 1.1rem; list-style: none; margin: 0; padding: 0.9rem 1.25rem; color: #1e293b; background: white; font-size: 0.8rem; }
+.graph-legend li { display: flex; align-items: center; gap: 0.4rem; }
+.legend-dot { width: 0.85rem; height: 0.85rem; border: 1px solid #334155; border-radius: 50%; flex-shrink: 0; }
+.depth-root { background: #f59e0b; }
+.depth-one { background: #22c55e; }
+.depth-two { background: #8b5cf6; }
+.depth-deep { background: #ef4444; }
+.depth-unknown { background: #cbd5e1; border-style: dashed; }
+#graph-view { background: white; color: #1e293b; color-scheme: light; }
+.graph-toolbar { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.6rem 1rem; border-block: 1px solid #e2e8f0; }
+.graph-toolbar button { color: #1e293b; background: #f8fafc; font-size: 0.8rem; }
+#graph-canvas { display: block; width: 100%; height: clamp(24rem, 65vh, 50rem); background: #fff; touch-action: none; user-select: none; cursor: grab; }
+#graph-canvas.is-moving { cursor: grabbing; }
+.graph-edge { fill: none; stroke: #94a3b8; stroke-width: 1.2; }
+.graph-node { cursor: grab; }
+.graph-node circle { stroke: #334155; stroke-width: 1.2; }
+.graph-node .unknown-depth { stroke-dasharray: 3 2; }
+.graph-node.is-pinned circle { stroke-width: 3; }
+.graph-node.is-selected circle, .graph-node:focus-visible circle { stroke: #0f172a; stroke-width: 4; }
+.graph-node text { fill: #1e293b; font: 12px ui-sans-serif, system-ui, sans-serif; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
+.graph-node .pin-label { font-size: 10px; font-weight: bold; }
+.graph-help, .layout-status { margin: 0; padding: 0.5rem 1rem; font-size: 0.8rem; line-height: 1.5; }
+.layout-status { min-height: 2.5rem; color: #475569; }
+@media (max-width: 760px) { .state-badge { white-space: nowrap; } }
