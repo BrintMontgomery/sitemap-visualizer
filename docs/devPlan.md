@@ -4,9 +4,9 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 16 — complete by documented omission of optional XHR; Phase 17 is next; Phases 1–16 are complete.
-* **Last green verification:** Phase 16 XHR decision; all 134 unit/integration/smoke tests pass. No runtime changes; Phase 15's seven Chromium file:// browser checks remain the previous browser evidence. See `docs/xhr-decision.md` for scope and verification.
-* **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
+* **Current phase:** Phase 17 — complete by documented omission of the cooperative iframe bridge; Phase 18 is next; Phases 1–17 are complete.
+* **Last green verification:** Phase 17 iframe bridge decision; all 138 unit/integration/smoke tests pass. No runtime changes; Phase 15's seven Chromium file:// browser checks remain the previous browser evidence. See `docs/iframe-bridge-decision.md` and `docs/xhr-decision.md` for scope and verification.
+* **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phase 17 recorded the bridge as unshipped P1; Phase 18 remains conditional. Neither blocks the P0 release.
 
 ## Why this plan
 The repository now displays a semantic static application shell from `index.html`, with local CSS, a deferred classic script, an empty state, and a development smoke suite. It does not yet import source data, build a graph, crawl permitted pages, or export results. The goal is a static package that opens under `file://` and gives a site analyst an honest map of what the browser or imported files actually establish. Live coverage is bounded by CORS and readable site policy; XML inventory alone cannot prove links or click depth.
@@ -435,7 +435,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 17: Conditional cooperative iframe bridge
+## [x] Phase 17: Conditional cooperative iframe bridge
 *Integrate only an existing target-operated public-data bridge. **Risk:** High — spoofed cross-origin messages can inject untrusted records. **Thinking effort:** Very High (advanced model). **Depends on:** 2, 12.*
 
 ### 1. Objectives & Scope
@@ -443,15 +443,18 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** if a compatible provider exists, only a validated public response enters acquisition evidence; otherwise mode stays disabled.
 
 ### 2. Implementation Checklist
-- [ ] Document real provider protocol and embedding policy before enabling the mode.
-- [ ] Create a per-request random nonce; validate `event.origin`, `event.source`, protocol version, public-only schema, length and URL scope.
-- [ ] Reject malformed/spoofed messages without graph mutation; classify frame denial and timeout as unavailable.
-- [ ] Test `file://` origin `null` without treating it as proof of parent identity or exposing credentials.
+- [x] Document real provider protocol and embedding policy before enabling the mode: no real provider, protocol or embedding permission exists, so the mode stays disabled and the bridge remains unshipped P1 (FR-048).
+- [x] Create a per-request random nonce; validate `event.origin`, `event.source`, protocol version, public-only schema, length and URL scope: not applicable while unshipped; no message listener exists, and these checks are recorded as reopening criteria.
+- [x] Reject malformed/spoofed messages without graph mutation; classify frame denial and timeout as unavailable: spoofed messages are inert and never mutate the graph; the disabled mode fails closed as `not-supported` with import alternatives, and `BRIDGE_UNAVAILABLE` is preserved by the contract.
+- [x] Test `file://` origin `null` without treating it as proof of parent identity or exposing credentials: origin `null` and `file://` messages are tested as inert; no frame, request or credential-bearing navigation is made.
 
 ### 3. Testing & Verification
 * **Checks:** AT-25–28 with real compatible provider or a development-only cooperative fixture; offline imports still work on failure.
 * **Acceptance:** enable only after valid/invalid-message tests pass; otherwise record feature as unshipped P1.
 * **Commit point:** commit validated integration and threat note only if enabled.
+* **Decision (27 October 2026):** Omit the cooperative iframe bridge (FR-048–050, NFR-024), as this phase and FR-048 require when no deployed, documented, embeddable bridge exists. No integration code ships. See `docs/iframe-bridge-decision.md` for the retained threat boundary and reopening criteria; this completes the conditional evaluation, not delivery of a bridge.
+- [x] New regressions in `tests/iframe-bridge-decision.test.js`: a static scan finds no iframe, `postMessage` or `message` listener in shipped scripts or markup; contracts reject every `iframe-bridge` result and any `bridge-reported` claim; jsdom integration selects the disabled option (directly and with a tampered value) and dispatches spoofed messages from origins `null`, `file://`, empty and the bridge host with guessed nonces. The run fails closed, no graph mutation, listener, frame or request occurs, and local CSV import still yields the four-page, four-edge graph. A mutation check confirmed the tests fail when a `message` listener is added.
+- [x] `npm test`: all 138 tests pass. AT-25–28 are not applicable for the unshipped mode; no browser or cross-browser claim is made.
 
 ---
 
