@@ -4,8 +4,8 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 15 — complete; Phase 16 is next; Phases 1–15 are complete.
-* **Last green commit:** Phase 15 enhanced imports and hierarchy preview; all 132 unit/integration/smoke tests and seven Chromium file:// browser checks pass. See `docs/enhanced-imports.md` for bounds, semantics and verification.
+* **Current phase:** Phase 16 — complete by documented omission of optional XHR; Phase 17 is next; Phases 1–16 are complete.
+* **Last green verification:** Phase 16 XHR decision; all 134 unit/integration/smoke tests pass. No runtime changes; Phase 15's seven Chromium file:// browser checks remain the previous browser evidence. See `docs/xhr-decision.md` for scope and verification.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
@@ -413,7 +413,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 16: Optional XHR compatibility adapter
+## [x] Phase 16: Optional XHR compatibility adapter
 *Provide a second browser transport with the same CORS boundary. **Risk:** Medium — XHR could diverge in caps or error labels. **Thinking effort:** Medium (simple model). **Depends on:** 10, 12.*
 
 ### 1. Objectives & Scope
@@ -421,14 +421,17 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** if enabled, XHR returns the same validated result shape and cannot read CORS-blocked bodies.
 
 ### 2. Implementation Checklist
-- [ ] Implement timeout, abort, content type and byte limits using the shared contract when enabled.
-- [ ] Reuse central URL/scope validation and issue classification; do not describe XHR as a CORS workaround.
-- [ ] Compare fetch and XHR results against the same allowed/denied fixture.
+- [x] Evaluate timeout, abort, content type and byte limits: XHR remains unshipped; implementation is not applicable because no compatibility need is documented and buffering would require separate bounds evidence.
+- [x] Retain central URL/scope validation and issue classification through the existing fetch adapter; document that XHR cannot work around CORS. No alternate transport is enabled.
+- [x] Record fetch/XHR fixture comparison as not applicable for unshipped XHR; retain existing fetch allowed/denied fixtures and verify absent/failed fetch never starts XHR.
 
 ### 3. Testing & Verification
 * **Checks:** AT-22 and AT-37 for enabled XHR; offline import remains usable when adapter fails.
 * **Acceptance:** no special-case graph mutation or weaker resource bound exists.
 * **Commit point:** commit only if adapter is shipped; otherwise mark the documented decision.
+* **Decision (27 October 2026):** Omit optional XHR (FR-045), as expressly permitted by this phase and the requirements' buffering caveat. No reported browser/endpoint compatibility case justifies a second transport. See `docs/xhr-decision.md`; this completes the conditional evaluation, not delivery of an XHR adapter. This documentation/test decision is committed at the user's explicit request.
+- [x] New UI integration regressions cover unavailable fetch and rejected fetch, zero XHR attempts, no graph/response evidence, and successful subsequent local CSV import without network calls.
+- [x] `npm test`: all 134 tests pass; existing fetch tests cover scope, types, byte budgets, timeout, cancellation and allowed/denied results. AT-22/AT-37 XHR portions are not applicable; no new cross-browser claim is made.
 
 ---
 
