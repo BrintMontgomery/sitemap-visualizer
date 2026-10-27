@@ -1,6 +1,6 @@
 # Third-Party Runtime Notices
 
-**Phase 1 inventory — 26 October 2026**
+**Release review (Phase 19) — 27 October 2026.** First recorded in Phase 1 (26 October 2026); unchanged since.
 
 The application ships no third-party runtime libraries or package dependencies, remote scripts, remote stylesheets, or CDN requests. The `vendor/` directory is reserved and contains no production code. Dependency versions, third-party licenses, asset hashes, and CDN subresource-integrity values are therefore not applicable to this phase.
 
@@ -17,4 +17,4 @@ The Node.js test command is development-only. Tests use Node's built-in modules 
 
 ## Future dependency policy
 
-Core features must remain usable from local files with network access disabled. If a third-party package is later selected, pin its exact version, bundle and verify the production bytes locally, record its license and SHA-256 hash, and test the offline copy. Any optional HTTPS CDN fallback must use a pinned version and Subresource Integrity, load only after the local copy, and never be required for startup or core behavior. No CDN is configured in this phase.
+Core features must remain usable from local files with network access disabled. If a third-party package is later selected, pin its exact version, bundle and verify the production bytes locally, record its license and SHA-256 hash, and test the offline copy. Any optional HTTPS CDN fallback must use a pinned version and Subresource Integrity, load only after the local copy, and never be required for startup or core behavior. No CDN is configured. The release check confirms that all 15 scripts load from local relative paths and that an offline run makes no remote request.

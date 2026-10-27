@@ -4,9 +4,9 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 17 — complete by documented omission of the cooperative iframe bridge; Phase 19 is next; Phases 1–17 are complete. Phase 18 (allowlisted JSONP) was removed from the plan on 27 October 2026; see Deferred Items.
-* **Last green verification:** Phase 17 iframe bridge decision; all 138 unit/integration/smoke tests pass. No runtime changes; Phase 15's seven Chromium file:// browser checks remain the previous browser evidence. See `docs/iframe-bridge-decision.md` and `docs/xhr-decision.md` for scope and verification.
-* **Open questions / blockers:** None for the P0 release. Phase 17 recorded the cooperative iframe bridge as unshipped P1, and the P2 JSONP provider is omitted without a phase. Neither blocks the P0 release.
+* **Current phase:** Phase 19 — in progress. The automated gate passes in Chromium; Chrome/Edge/Firefox runs, a screen-reader review and owner decisions remain (see `docs/release-evidence.md`). Phases 1–17 are complete. Phase 18 (allowlisted JSONP) was removed from the plan on 27 October 2026; see Deferred Items.
+* **Last green verification:** Phase 19 release-gate run, 27 October 2026: all 152 unit/integration/smoke tests, eight Chromium 153 `file://` browser checks (repository and clean package) and the LibreOffice spreadsheet check pass. See `docs/release-evidence.md`.
+* **Open questions / blockers:** Chrome, Edge and Firefox are not available in the development container (Firefox downloads are blocked by its network policy). Owner decisions needed: the NFR-009 live-timing exception and NFR-014 export versioning (both P1). The robots and private-address deviations stand as recorded in Phases 10–11.
 
 ## Why this plan
 The repository now displays a semantic static application shell from `index.html`, with local CSS, a deferred classic script, an empty state, and a development smoke suite. It does not yet import source data, build a graph, crawl permitted pages, or export results. The goal is a static package that opens under `file://` and gives a site analyst an honest map of what the browser or imported files actually establish. Live coverage is bounded by CORS and readable site policy; XML inventory alone cannot prove links or click depth.
@@ -466,17 +466,21 @@ Phase 18 (conditional allowlisted JSONP) was removed; the number is left unused 
 * **Done means:** every P0 item is evidenced; every enabled P1/P2 mode passes its checks; the package imports, graphs, inspects and exports offline under `file://`.
 
 ### 2. Implementation Checklist
-- [ ] Map FR-001–065 and NFR-001–029 to tests/manual evidence and state unshipped conditional features plainly: the P1 iframe bridge (FR-048–050, NFR-024) and the omitted P2 JSONP provider (FR-051–052, FR-063, NFR-025).
-- [ ] Run AT-01–37 as applicable, including file launch in Chrome/Edge/Firefox, CORS allowed/denied fixtures, no-network imports/exports, keyboard use, caps, CSV injection and traffic inspection.
-- [ ] Record 50-page duration and 250-node/1,000-edge responsiveness against proposed targets; identify browser/device and exceptions.
-- [ ] Review bundled dependency versions, licenses, exact source/SRI if CDN enabled, export schema, threat model, and README CORS limits.
-- [ ] Verify no backend/proxy/telemetry, no remote script from imported data, and no false completeness or unrestricted-crawl claim.
-- [ ] Run AT-29: with the `jsonp-provider` mode disabled, a generic URL never loads as script, the disabled notice is shown, and offline/default operation loads no provider script. AT-30 is not applicable because JSONP is not shipped.
+- [x] Map FR-001–065 and NFR-001–029 to tests/manual evidence and state unshipped conditional features plainly: the P1 iframe bridge (FR-048–050, NFR-024) and the omitted P2 JSONP provider (FR-051–052, FR-063, NFR-025). See `docs/release-matrix.md`.
+- [ ] Run AT-01–37 as applicable, including file launch in Chrome/Edge/Firefox, CORS allowed/denied fixtures, no-network imports/exports, keyboard use, caps, CSV injection and traffic inspection. Done in Chromium 153 and LibreOffice; Chrome, Edge, Firefox, Excel/Google Sheets and screen-reader runs remain (manual steps in `docs/release-evidence.md`).
+- [x] Record 50-page duration and 250-node/1,000-edge responsiveness against proposed targets; identify browser/device and exceptions. Import: 77–92 ms (50 pages), 130–152 ms (250/1,000). Live 50-page site: 50.1 s, over the 30 s target because of the one-request-per-second host limit (exception for owner decision).
+- [x] Review bundled dependency versions, licenses, exact source/SRI if CDN enabled, export schema, threat model, and README CORS limits. No runtime dependency or CDN; notices, README and user guide updated.
+- [x] Verify no backend/proxy/telemetry, no remote script from imported data, and no false completeness or unrestricted-crawl claim. Offline traffic observer with positive control; static scan of scripts.
+- [x] Run AT-29: with the `jsonp-provider` mode disabled, a generic URL never loads as script, the disabled notice is shown, and offline/default operation loads no provider script. AT-30 is not applicable because JSONP is not shipped. See `tests/jsonp-omission.test.js`.
 
 ### 3. Testing & Verification
 * **Checks:** all P0 acceptance rows in §10, especially AT-16–19, AT-22–24, AT-29, AT-35–37; AT-25–28 and AT-30 only for enabled optional modes (none are currently enabled).
 * **Acceptance:** clean local package passes required checks in all three desktop browsers with documented evidence and no P0 gap.
 * **Commit point:** commit only release docs/evidence/fixes needed to clear the gate.
+* **Fixes (27 October 2026):** Chromium's URL parser accepted a host containing a space and the app requested it; `normalizeUrl` now rejects empty or `%`-bearing hosts (AT-02). Root URL errors now name the field and reason, and the field is marked `aria-invalid` (FR-003). Rejected runs no longer show "undefined" limits or import coverage text. A "Why can't this URL be read?" explanation now follows a refused or opaque live read (FR-059).
+- [x] New checks: `tests/release-gate-browser-check.cjs` (direct-file defaults, URL rejection, offline workflow and exports, traffic with positive control, JSONP option, timings, live 50-page site, FR-059), `tests/jsonp-omission.test.js`, `tests/spreadsheet-injection-check.cjs` (LibreOffice, with positive control), two `run-controls` regressions, and cap 10 in the 30-page graph test (AT-05). Fixture `sample-data/fifty-page-links.csv`. Each regression for a fix failed against the code before that fix.
+- [x] `npm test`: 152 pass. All eight Chromium browser checks pass, and the release check also passes against a clean copy of the shipped files.
+* **Note:** limits live in `js/contracts.js`; the specification's illustrative `js/config.js` was not created.
 
 ---
 

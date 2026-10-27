@@ -70,13 +70,15 @@
       SitemapMetrics.render(document.getElementById("graph-metrics"), form.metrics, data);
     }
     syncExports();
-    summary.textContent = "Run " + data.runId + " | " + data.mode + " | " + data.input + " | Root: " + (data.root || "unknown") + " | " + data.startedAt + " | Limits: " + data.limits.pages + " pages, depth " + data.limits.depth + ", " + data.limits.durationMs + " ms | Duration: " + data.durationMs + " ms | Included: " + data.counts.pages + " pages, " + data.counts.links + " links | Exclusions: " + data.counts.exclusions + " | Truncated: " + data.truncated + " | " + data.coverage;
+    summary.textContent = "Run " + data.runId + " | " + data.mode + " | " + data.input + " | Root: " + (data.root || "unknown") + " | " + data.startedAt + " | Limits: " + (data.limits.pages == null ? "not applied (input rejected)" : data.limits.pages + " pages, depth " + data.limits.depth + ", " + data.limits.durationMs + " ms") + " | Duration: " + data.durationMs + " ms | Included: " + data.counts.pages + " pages, " + data.counts.links + " links | Exclusions: " + data.counts.exclusions + " | Truncated: " + data.truncated + " | " + data.coverage;
     document.getElementById("outcome-report").hidden = false;
     document.getElementById("outcome-guidance").textContent = data.guidance;
     document.getElementById("outcome-alternatives").textContent = data.alternatives;
+    document.getElementById("unreadable-help").hidden = data.mode !== "live-cors" || !data.issues.some(function (i) { return ["NETWORK_OR_POLICY_FAILURE", "OPAQUE_RESPONSE"].includes(i.code); });
     document.getElementById("run-diagnostics").textContent = JSON.stringify(data, null, 2);
     setState(data.state, data.outcome);
   }
+  function clearInvalid() { Array.from(form.querySelectorAll("[aria-invalid]")).forEach(function (el) { el.removeAttribute("aria-invalid"); }); }
   function setState(state, message) { status.dataset.state = state; status.textContent = state + (message ? ": " + message : ""); }
   function stop() { if (current) { current.controller.abort(); if (current.session) current.session.close(); } current = null; }
   function syncMappings() {
@@ -116,21 +118,33 @@
   form.elements.inputFile.onchange = function () { document.getElementById("source-mappings").replaceChildren(); syncMappings(); };
   form.elements.mode.onchange = syncMode; form.elements.pasteKind.onchange = syncMode; syncMode();
   document.getElementById("cancel-run").onclick = function () { if (current) { var active = current; stop(); report(active, null, form.graph, "cancelled", { code: "CANCELLED", message: "Analysis cancelled." }); } };
-  document.getElementById("reset-run").onclick = function () { stop(); clearGraph(); form.reset(); document.getElementById("source-mappings").replaceChildren(); syncMode(); summary.textContent = ""; setState("queued", "Ready for input."); };
+  document.getElementById("reset-run").onclick = function () { stop(); clearGraph(); form.reset(); clearInvalid(); document.getElementById("source-mappings").replaceChildren(); syncMode(); summary.textContent = ""; setState("queued", "Ready for input."); };
   form.onsubmit = async function (event) {
     event.preventDefault();
-    var mode = form.elements.mode.value, file = form.elements.inputFile.files[0], run;
+    var mode = form.elements.mode.value, file = form.elements.inputFile.files[0], run, field;
+    clearInvalid();
     try {
+      field = form.elements.mode;
       if (!["csv-import", "xml-import", "html-import", "paste-import", "live-cors"].includes(mode)) throw Error("This mode is unavailable.");
+      field = form.elements.inputFile;
       if (!["live-cors", "paste-import"].includes(mode) && !file) throw Error("Select a local file.");
+      field = form.elements.rootUrl;
       var root = form.elements.rootUrl.value.trim();
       if (mode === "live-cors" && !root) throw Error("Live retrieval requires a declared source URL.");
+      if (root) { var checked = SitemapContracts.normalizeUrl(root); if (!checked.ok) throw Error("Root URL: " + checked.issue.message); }
+      field = form.elements.requestTimeoutMs;
       var timeout = Number(form.elements.requestTimeoutMs.value);
       if (mode === "live-cors" && (!Number.isInteger(timeout) || timeout < 1 || timeout > SitemapContracts.limits.requestTimeoutMs)) throw Error("Request timeout must be between 1 and 10000 milliseconds.");
+      field = null;
       run = SitemapContracts.createRun({ mode: mode, rootUrl: root || null, maxPages: Number(form.elements.maxPages.value), maxDepth: Number(form.elements.maxDepth.value), maxConcurrency: mode === "live-cors" ? Number(form.elements.maxConcurrency.value) : undefined, maxDurationMs: mode === "live-cors" ? Number(form.elements.runDurationSeconds.value) * 1000 : undefined });
     } catch (error) {
       stop(); clearGraph();
-      report({ id: ++sequence, mode: mode, input: mode === "live-cors" ? form.elements.rootUrl.value : mode === "paste-import" ? "Pasted input" : file && file.name, started: Date.now(), startedAt: new Date().toISOString(), unsupported: !["csv-import", "xml-import", "html-import", "paste-import", "live-cors"].includes(mode) }, null, null, "failed", { code: "INPUT_MALFORMED", message: error.message }); return;
+      report({ id: ++sequence, mode: mode, input: mode === "live-cors" ? form.elements.rootUrl.value : mode === "paste-import" ? "Pasted input" : file && file.name, started: Date.now(), startedAt: new Date().toISOString(), unsupported: !["csv-import", "xml-import", "html-import", "paste-import", "live-cors"].includes(mode) }, null, null, "failed", { code: "INPUT_MALFORMED", message: error.message });
+      // Name the rejected field before the general guidance.
+      if (field) field.setAttribute("aria-invalid", "true");
+      var guidanceText = document.getElementById("outcome-guidance");
+      guidanceText.textContent = error.message + " " + guidanceText.textContent;
+      return;
     }
     stop(); clearGraph(); summary.textContent = "";
     var active = { id: ++sequence, controller: new AbortController(), run: run, mode: mode, input: mode === "live-cors" ? run.rootUrl : mode === "paste-import" ? "Pasted input" : Array.from(form.elements.inputFile.files).map(function (f) { return f.name; }).join(", "), started: Date.now(), timeout: mode === "live-cors" ? timeout : undefined }; current = active;

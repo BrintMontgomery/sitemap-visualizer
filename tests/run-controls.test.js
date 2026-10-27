@@ -24,3 +24,44 @@ test('controls validate, cancel, replace and ignore stale results',async()=>{
  w.document.getElementById('reset-run').click();assert.equal(f.graph,null);assert.equal(status.dataset.state,'queued');
  dom.window.close();
 });
+test('a rejected root URL names the field and reason without starting a run',async()=>{
+ const dom=new JSDOM(fs.readFileSync('index.html','utf8'),{runScripts:'outside-only'}), w=dom.window, f=w.document.getElementById('run-form'), status=w.document.getElementById('run-status');
+ const fetched=[];
+ w.SitemapContracts=contracts;w.SitemapOutcomes=require('../js/outcome-report');
+ w.SitemapDiscovery={discover:url=>{fetched.push(url);return new Promise(()=>{});}};
+ w.eval(fs.readFileSync('js/run-controls.js','utf8'));
+ const guidance=w.document.getElementById('outcome-guidance'), summary=w.document.getElementById('run-summary');
+ f.elements.mode.value='live-cors';f.elements.mode.onchange();
+ for(const [url,reason] of [['javascript:alert(1)','Only HTTP(S) URLs are supported.'],['ftp://example.test/','Only HTTP(S) URLs are supported.'],['https://user:pw@example.test/','URLs containing credentials are not allowed.'],['https://','Enter a valid HTTP(S) URL.']]){
+  f.elements.rootUrl.value=url;await f.onsubmit({preventDefault(){}});
+  assert.equal(status.dataset.state,'failed',url);
+  assert.equal(guidance.textContent.startsWith('Root URL: '+reason+' INPUT_MALFORMED:'),true,guidance.textContent);
+  assert.equal(f.elements.rootUrl.getAttribute('aria-invalid'),'true');
+  assert.match(summary.textContent,/Limits: not applied \(input rejected\)/);
+  assert.match(summary.textContent,/Bounded browser-readable discovery/);
+ }
+ assert.deepEqual(fetched,[]);
+ w.document.getElementById('reset-run').click();
+ assert.equal(f.elements.rootUrl.hasAttribute('aria-invalid'),false);
+ dom.window.close();
+});
+test('an unreadable live URL offers the why-unreadable explanation; imports do not',async()=>{
+ const dom=new JSDOM(fs.readFileSync('index.html','utf8'),{runScripts:'outside-only'}), w=dom.window, f=w.document.getElementById('run-form');
+ w.SitemapContracts=contracts;w.SitemapOutcomes=require('../js/outcome-report');
+ w.SitemapDiscovery={discover:async()=>({ok:false,attempts:[],issue:{code:'NETWORK_OR_POLICY_FAILURE',message:'No readable response.'}})};
+ w.SitemapCsvImport={importFile:async()=>({ok:true})};
+ w.SitemapGraph={buildGraph:()=>({nodes:[{url:'https://example.test/'}],edges:[],exclusions:[],issues:[],partial:false})};
+ w.eval(fs.readFileSync('js/run-controls.js','utf8'));
+ const help=w.document.getElementById('unreadable-help');
+ assert.equal(help.hidden,true);
+ assert.equal(help.querySelector('summary').textContent,"Why can't this URL be read?");
+ assert.match(help.textContent,/CORS/);assert.match(help.textContent,/sitemap\.xml/);assert.match(help.textContent,/links CSV/);assert.match(help.textContent,/establishes no links or click depth/);
+ f.elements.mode.value='live-cors';f.elements.mode.onchange();f.elements.rootUrl.value='https://example.test/';
+ await f.onsubmit({preventDefault(){}});
+ assert.equal(f.report.outcome,'not-readable');assert.equal(help.hidden,false);
+ f.elements.mode.value='csv-import';f.elements.mode.onchange();
+ Object.defineProperty(f.elements.inputFile,'files',{value:[{name:'links.csv'}]});
+ await f.onsubmit({preventDefault(){}});
+ assert.equal(help.hidden,true);
+ dom.window.close();
+});

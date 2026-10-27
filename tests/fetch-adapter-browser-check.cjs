@@ -140,7 +140,7 @@ const root = path.resolve(__dirname, '..');
     await live('/allowed?token=QUERY_SECRET#FRAGMENT_SECRET'); await terminal();
     assert.equal(await page.evaluate(() => document.getElementById('run-form').report.outcome), 'readable');
     for (const selector of ['#run-summary', '#run-diagnostics', '#discovery-log']) assert.doesNotMatch(await page.locator(selector).textContent(), /QUERY_SECRET|FRAGMENT_SECRET/);
-    await page.locator('#outcome-report summary').click();
+    await page.locator('#outcome-report summary', { hasText: 'Local diagnostics' }).click();
     await page.setViewportSize({ width: 320, height: 1024 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await page.screenshot({ path: '/tmp/phase12-outcomes.png', fullPage: true });

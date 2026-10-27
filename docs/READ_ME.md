@@ -2,7 +2,7 @@
 
 A browser-only JavaScript application for mapping site structure from local files or browser-readable live pages. It displays a directed graph, provides page and link evidence, and downloads PNG and CSV reports.
 
-**Updated:** 26 October 2026. **Implementation status:** Phases 1–13 complete; Phase 14 is next. See [the development plan](devPlan.md) for the checklist and remaining work.
+**Updated:** 27 October 2026. **Implementation status:** Phases 1–17 complete; Phase 18 removed; Phase 19, the release gate, is in progress. See [release evidence](release-evidence.md) for gate results and open items, and [the development plan](devPlan.md) for the checklist.
 
 ## Open the application
 
@@ -25,7 +25,7 @@ Choose an input mode, provide its required input, set limits, and select **Analy
 
 For saved HTML, the declared source URL also resolves relative links. Embedded `<base>` tags are ignored and reported. Imported scripts and embedded resources remain inactive.
 
-The current import UI selects one file. A local sitemap index can report missing referenced files; it does not automatically read neighboring files or fetch referenced sitemaps. Multi-file selection/mapping and paste input remain planned work. Live discovery can expand readable nested sitemap indexes.
+You can select several files at once, give each a content kind and source URL, or paste HTML, XML or CSV text. A local sitemap index resolves references only among the files you selected and reports the rest as missing; it never fetches them. Live discovery can expand readable nested sitemap indexes. See [enhanced imports](enhanced-imports.md).
 
 ### Offline example
 
@@ -53,7 +53,7 @@ Live discovery follows readable HTML links and sitemap indexes within the root h
 
 Fixed safeguards also bound bytes, records, sitemap requests, parsing structure, and request frequency. For example, live acquisition allows at most 2,000,000 body bytes per resource and 10,000,000 network bytes per run, with at least one second between request starts for a host. The first exhausted bound stops or truncates work; the page ceiling is not a promise to fetch that many pages. See [discovery details](discovery.md) for scheduling and all budgets.
 
-Public, intranet, and loopback HTTP(S) hosts are accepted, but CORS, mixed-content restrictions, and local-network permissions still control access. The application has no backend or proxy and cannot read a CORS-blocked or opaque response. A generic network rejection cannot establish whether CORS, connectivity, or another policy caused it. Use a local import when live content is unreadable.
+Public, intranet, and loopback HTTP(S) hosts are accepted, but CORS, mixed-content restrictions, and local-network permissions still control access. The application has no backend or proxy and cannot read a CORS-blocked or opaque response. A generic network rejection cannot establish whether CORS, connectivity, or another policy caused it. After a refused read, open **Why can't this URL be read?** in the outcome report for causes and next steps. Use a local import when live content is unreadable.
 
 **Cancel** stops the active run and discards unfinished discovery. **Analyze / New run** replaces the previous run; **Reset** clears the current results and restores the form defaults.
 
@@ -101,9 +101,9 @@ npm ci
 npm test
 ```
 
-The suite uses Node's test runner, development-only jsdom, and deterministic fixtures. The latest Phase 13 verification records **115 passing unit/integration/smoke tests** and five separate Chromium `file://` browser checks. Those are recorded implementation results, not a claim that every browser has passed the release gate.
+The suite uses Node's test runner, development-only jsdom, and deterministic fixtures. The Phase 19 run records **152 passing unit/integration/smoke tests**, eight Chromium `file://` browser checks, and a LibreOffice spreadsheet-injection check. Those are recorded results in Chromium 153, not a claim that every browser has passed the release gate.
 
-Optional browser checks use Playwright and Chromium; the live-fetch check starts a development-only loopback fixture. Instructions and evidence are in [HTML import](html-import.md), [graph rendering](graph-rendering.md), [page inspection](page-inspection.md), [fetch adapter](fetch-adapter.md), and [exports](exports.md). Current Chrome, Edge, and Firefox release acceptance, spreadsheet application checks, and final performance evidence remain Phase 19 work.
+Optional browser checks use Playwright and Chromium; the live-fetch and release checks start a development-only loopback fixture. Commands, results and measurements are in [release evidence](release-evidence.md). Chrome, Edge and Firefox runs, Excel and Google Sheets checks, and a screen-reader review are still open.
 
 ### Edit through the browser
 
@@ -118,6 +118,6 @@ After Codex changes the repository, refresh or pull in vscode.dev. Commit and pu
 
 ## Remaining work and reference
 
-Phase 14 metrics, connected components, qualified orphan candidates, and optional neighbor highlights are not yet shipped. Phase 15 adds paste, multi-file imports, and a separately labeled inferred hierarchy preview. XHR is conditional; cooperative iframe and JSONP modes remain disabled without suitable providers and verification. None provides arbitrary cross-origin access.
+Metrics, connected components, qualified orphan candidates, neighbor highlights, paste and multi-file imports, and the labeled hierarchy preview are shipped. XHR, the cooperative iframe bridge and JSONP are not shipped; their modes stay disabled. None would provide arbitrary cross-origin access. Open release items are listed in [release evidence](release-evidence.md#open-items).
 
-For technical details, consult [run contracts](run-contract.md), [CSV import](csv-import.md), [XML import](xml-import.md), [graph construction](graph.md), [dependency notices](../THIRD_PARTY_NOTICES.md), and [the development plan](devPlan.md).
+For technical details, consult [the release matrix](release-matrix.md), [run contracts](run-contract.md), [CSV import](csv-import.md), [XML import](xml-import.md), [graph construction](graph.md), [dependency notices](../THIRD_PARTY_NOTICES.md), and [the development plan](devPlan.md).

@@ -88,9 +88,9 @@ test("page and depth caps use stable BFS priority, preserve cross-links, count e
   assert.equal(graph.truncated, true); assert.equal(depth.partial, true);
 });
 
-test("30-page fixture enforces cap at one, below, and exactly the node count", async () => {
+test("30-page fixture enforces cap at one, ten, below, and exactly the node count", async () => {
   const batch = await csv.importFile(fixture("thirty-page-links.csv"), run());
-  for (const maxPages of [1, 29, 30]) {
+  for (const maxPages of [1, 10, 29, 30]) {
     const graph = buildGraph(run({ rootUrl: null, maxPages, maxDepth: 4 }), [batch]);
     assert.equal(graph.nodes.length, maxPages); assert.equal(graph.truncated, maxPages < 30);
     const included = new Set(graph.nodes.map(n => n.url));

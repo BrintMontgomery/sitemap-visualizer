@@ -29,6 +29,8 @@
       var url = base === undefined ? new URL(input) : new URL(input, base);
       if (url.protocol !== "http:" && url.protocol !== "https:") return rejected("Only HTTP(S) URLs are supported.");
       if (url.username || url.password) return rejected("URLs containing credentials are not allowed.");
+      // Some parsers percent-encode forbidden host characters instead of failing.
+      if (!url.hostname || url.hostname.indexOf("%") !== -1) return rejected("Enter a valid HTTP(S) URL.");
       url.hash = "";
       return { ok: true, url: url.href };
     } catch (_) { return rejected("Enter a valid HTTP(S) URL."); }
