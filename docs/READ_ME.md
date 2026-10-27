@@ -16,6 +16,8 @@ The hosted version is available at [GitHub Pages](https://brintmontgomery.github
 
 Choose an input mode, provide its required input, set limits, and select **Analyze / New run**.
 
+**Live discovery** is the default mode. Select the information icon beside **Input mode** for a summary of each mode.
+
 | Mode | Required input | What it establishes |
 |---|---|---|
 | Links CSV | One local comma-separated file with `source` and `target` headers containing absolute HTTP(S) URLs | Supplied assertions of directed hyperlinks; these are not independently verified |

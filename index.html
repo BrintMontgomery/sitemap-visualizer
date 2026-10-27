@@ -34,7 +34,7 @@
   </header>
 
   <form id="run-form" aria-label="Analyze sitemap data">
-<label>Input mode <select name="mode"><option value="csv-import">Links CSV — asserted hyperlinks</option><option value="xml-import">Sitemap XML — inventory only</option><option value="html-import">Saved HTML — links observed in file</option><option value="live-cors">Live discovery — readable HTML and sitemaps</option><option disabled>Iframe bridge — no compatible provider</option><option disabled>JSONP — no approved provider</option><option value="paste-import">Paste — explicit HTML, XML or CSV</option></select></label>
+<div class="mode-field"><span class="field-label"><label for="input-mode">Input mode</label><button id="input-mode-help" class="info-button" type="button" aria-label="About input modes" aria-haspopup="dialog" aria-controls="input-mode-dialog"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8.5"/><path d="M10 9v5"/><circle class="info-dot" cx="10" cy="6" r="1"/></svg></button></span><select id="input-mode" name="mode"><option value="csv-import">Links CSV — asserted hyperlinks</option><option value="xml-import">Sitemap XML — inventory only</option><option value="html-import">Saved HTML — links observed in file</option><option value="live-cors" selected>Live discovery — readable HTML and sitemaps</option><option disabled>Iframe bridge — no compatible provider</option><option disabled>JSONP — no approved provider</option><option value="paste-import">Paste — explicit HTML, XML or CSV</option></select></div>
 <label data-file-option>Local files (first XML is the entry point) <input name="inputFile" type="file" multiple required></label>
 <div id="source-mappings" data-file-option></div>
 <div data-paste-option hidden>
@@ -45,16 +45,36 @@
 <p data-file-option>Each selected file has an explicit content kind; mixed HTML, XML and CSV are supported. Up to 128 selected files; 2 MB per file and 10 MB total. HTML needs a source URL per file. XML references resolve only through explicit URL mappings; unmapped files are never fetched. Paste and imports make no network requests.</p>
 <label>Root URL (required for live discovery; optional for local link depth) <input name="rootUrl" type="url" placeholder="https://example.org/"></label>
 <label data-live-option hidden>Request timeout (milliseconds) <input name="requestTimeoutMs" type="number" min="1" max="10000" value="10000" disabled></label>
-<label data-live-option hidden>Concurrent requests <input name="maxConcurrency" type="number" min="1" max="8" value="2" disabled></label>
-<label data-live-option hidden>Run duration (seconds) <input name="runDurationSeconds" type="number" min="1" max="300" value="30" disabled></label>
-<label>Maximum pages <input name="maxPages" type="number" min="1" max="250" value="50" required></label>
-<label>Maximum depth <input name="maxDepth" type="number" min="0" max="4" value="2" required></label>
+<label class="compact-field" data-live-option hidden>Concurrent requests <input name="maxConcurrency" type="number" min="1" max="8" value="2" disabled></label>
+<label class="compact-field" data-live-option hidden>Run duration (seconds) <input name="runDurationSeconds" type="number" min="1" max="300" value="30" disabled></label>
+<label class="compact-field">Maximum pages <input name="maxPages" type="number" min="1" max="250" value="50" required></label>
+<label class="compact-field">Maximum depth <input name="maxDepth" type="number" min="0" max="4" value="2" required></label>
 <button type="submit">Analyze / New run</button><button id="cancel-run" type="button">Cancel</button><button id="reset-run" type="button">Reset</button>
 <p>Live discovery follows readable links and sitemap indexes within the root host. Robots restrictions are ignored. Pages (up to 1,000), depth (up to 20), concurrency, time, byte and record limits bound coverage. HTTP(S) intranet and loopback hosts are allowed. The browser still controls CORS, mixed content and local-network permissions. Files stay in session memory. XML membership establishes no hyperlinks. Without a known root, link depth remains unknown.</p>
 <p id="run-status" role="status" aria-live="polite" data-state="queued">Ready for input.</p><p id="run-summary"></p>
 <section id="outcome-report" aria-label="Outcome and coverage" hidden><p id="outcome-guidance"></p><p id="outcome-alternatives"></p><details id="unreadable-help" hidden><summary>Why can't this URL be read?</summary><p>A web page can read another site only when that site sends CORS permission for this page's origin. A page opened from a file has origin <code>null</code>, which many sites do not permit. Network failure, privacy settings, mixed content, local-network permissions or site access controls block a read the same way, and the browser does not tell this page which cause applied. This application cannot override those rules.</p><p>To continue, open the site in your browser and save its sitemap (often <code>/sitemap.xml</code>) for Sitemap XML import, save pages for Saved HTML import, or run <code>tools/same-origin-link-export.js</code> on the site to export a links CSV. A sitemap lists URLs but establishes no links or click depth. A saved HTML file shows the links in that file only, not the whole site.</p></details><details><summary>Local diagnostics (redacted)</summary><pre id="run-diagnostics"></pre></details></section>
 <details id="discovery-log" hidden><summary>Discovery request log</summary><p>Robots restrictions ignored. Requests stay within the root host and browser access rules.</p><ol></ol></details>
 </form>
+<dialog id="input-mode-dialog" class="help-dialog" aria-labelledby="input-mode-dialog-title">
+  <h2 id="input-mode-dialog-title">Input modes</h2>
+  <p>Each mode reads a different kind of source and establishes a different kind of evidence. Every mode builds the same directed graph, limited by <strong>Maximum pages</strong> and <strong>Maximum depth</strong>.</p>
+  <dl>
+    <dt>Live discovery — readable HTML and sitemaps (default)</dt>
+    <dd>Requires an HTTP(S) <strong>Root URL</strong> and no file. The browser fetches pages within the root host, follows the links it can read, and expands readable sitemaps and sitemap indexes. It records observed links. Only sites that send CORS permission to this page can be read. Request timeout, concurrency, run duration, page and depth limits bound the run.</dd>
+    <dt>Links CSV — asserted hyperlinks</dt>
+    <dd>A local <code>.csv</code> file with <code>source</code> and <code>target</code> columns of absolute HTTP(S) URLs. Each row asserts one directed link. The application does not verify these links. Use it for crawler exports or the output of <code>tools/same-origin-link-export.js</code>.</dd>
+    <dt>Sitemap XML — inventory only</dt>
+    <dd>A local sitemap or sitemap index <code>.xml</code> file. It lists URLs and their metadata, such as last-modified dates. Sitemap membership establishes no hyperlinks, so pages appear without links between them.</dd>
+    <dt>Saved HTML — links observed in file</dt>
+    <dd>A local <code>.html</code> or <code>.htm</code> page saved from a browser, with its original address in <strong>Root URL</strong>. The links in that file are recorded, and relative links resolve against that address. It shows one saved page, not the current live site. Scripts in the file never run.</dd>
+    <dt>Paste — explicit HTML, XML or CSV</dt>
+    <dd>Paste up to 2 MB of HTML, sitemap XML or links CSV text and choose its kind. Pasted HTML needs a source URL. It follows the rules of the matching file mode and makes no network requests.</dd>
+    <dt>Iframe bridge and JSONP (unavailable)</dt>
+    <dd>Listed for completeness. No compatible provider exists, so these modes cannot be selected.</dd>
+  </dl>
+  <p>You can select several local files at once and set a content kind and source URL for each. Local imports work offline and make no network requests.</p>
+  <form method="dialog"><button type="submit" autofocus>Close</button></form>
+</dialog>
 <main id="main-content" class="app-layout">
     <section class="map-panel" aria-labelledby="map-title">
       <div class="panel-heading">

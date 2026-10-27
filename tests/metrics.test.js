@@ -105,7 +105,7 @@ test('direction highlights follow selection and reset without changing graph or 
 test('controller metrics and selected page fields clear on reset, failure, replacement and stale result',async()=>{
  const {graph}=await fixture(),dom=new JSDOM(fs.readFileSync('index.html','utf8'),{runScripts:'outside-only'}),w=dom.window,doc=w.document,f=doc.getElementById('run-form'),pending=[];
  Object.assign(w,{SitemapContracts:contracts,SitemapOutcomes:outcomes,SitemapMetrics:metrics,SitemapRenderer:rendererApi,SitemapDetails:detailsApi,SitemapGraph:{buildGraph:()=>graph},SitemapCsvImport:{importFile:()=>new Promise(resolve=>pending.push(resolve))}});
- w.eval(fs.readFileSync('js/run-controls.js','utf8'));Object.defineProperty(f.elements.inputFile,'files',{value:[{name:'links.csv'}]});
+ w.eval(fs.readFileSync('js/run-controls.js','utf8'));f.elements.mode.value='csv-import';f.elements.mode.onchange();Object.defineProperty(f.elements.inputFile,'files',{value:[{name:'links.csv'}]});
  const submit=()=>f.onsubmit({preventDefault(){}}),panel=doc.getElementById('graph-metrics');
  let task=submit();pending.shift()({ok:true});await task;assert.equal(panel.hidden,false);assert.equal(f.metrics.candidateCount,2);
  doc.querySelector('#page-inspection tbody button').focus();assert.match(doc.querySelector('.page-detail-content').textContent,/Weak component/);

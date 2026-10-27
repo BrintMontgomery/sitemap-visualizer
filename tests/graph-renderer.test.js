@@ -91,7 +91,7 @@ test('run replacement, cancellation and reset dispose displayed graphs; stale im
  const graph=await fixture(), dom=new JSDOM(fs.readFileSync('index.html','utf8'),{runScripts:'outside-only'}), w=dom.window, form=w.document.getElementById('run-form');
  const pending=[];w.SitemapContracts=contracts;w.SitemapRenderer=renderer;
  w.SitemapGraph={buildGraph:()=>graph};w.SitemapCsvImport={importFile:()=>new Promise(r=>pending.push(r))};
- w.SitemapOutcomes=require('../js/outcome-report');w.eval(fs.readFileSync('js/run-controls.js','utf8'));
+ w.SitemapOutcomes=require('../js/outcome-report');w.eval(fs.readFileSync('js/run-controls.js','utf8'));form.elements.mode.value='csv-import';form.elements.mode.onchange();
  Object.defineProperty(form.elements.inputFile,'files',{value:[{name:'links.csv'}]});
  const submit=()=>form.onsubmit({preventDefault(){}});
  const first=submit();pending.shift()({ok:true});await first;

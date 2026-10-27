@@ -116,6 +116,9 @@
     document.querySelectorAll("#source-mappings label").forEach(function (label) { var input = label.querySelector("input"), kind = label.querySelector("select"); kind.disabled = live || paste; input.disabled = live || paste || kind.value === "csv"; input.required = !live && !paste && kind.value === "html"; });
   }
   form.elements.inputFile.onchange = function () { document.getElementById("source-mappings").replaceChildren(); syncMappings(); };
+  var modeHelp = document.getElementById("input-mode-dialog");
+  document.getElementById("input-mode-help").onclick = function () { if (modeHelp.showModal) modeHelp.showModal(); else modeHelp.setAttribute("open", ""); };
+  modeHelp.onclick = function (event) { if (event.target === modeHelp) modeHelp.close(); };
   form.elements.mode.onchange = syncMode; form.elements.pasteKind.onchange = syncMode; syncMode();
   document.getElementById("cancel-run").onclick = function () { if (current) { var active = current; stop(); report(active, null, form.graph, "cancelled", { code: "CANCELLED", message: "Analysis cancelled." }); } };
   document.getElementById("reset-run").onclick = function () { stop(); clearGraph(); form.reset(); clearInvalid(); document.getElementById("source-mappings").replaceChildren(); syncMode(); summary.textContent = ""; setState("queued", "Ready for input."); };

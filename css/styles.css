@@ -158,6 +158,98 @@ a {
   font-weight: 600;
 }
 
+/* Input mode is wide enough to read its options; small number fields stay compact. */
+#run-form > div.mode-field {
+  display: flex;
+  flex: 2 1 24rem;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 28rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+#run-form > label.compact-field {
+  flex: 0 1 7.5rem;
+  max-width: 8.5rem;
+}
+
+.info-button {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  min-height: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--accent);
+  background: transparent;
+}
+
+.info-button:hover:not(:disabled) {
+  color: var(--accent-hover);
+  background: var(--accent-soft);
+}
+
+.info-button svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.info-button .info-dot {
+  fill: currentColor;
+  stroke: none;
+}
+
+.help-dialog {
+  width: min(42rem, calc(100% - 2rem));
+  max-height: calc(100vh - 4rem);
+  padding: 1.5rem 1.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 0.9rem;
+}
+
+.help-dialog::backdrop {
+  background: rgb(15 23 42 / 0.45);
+}
+
+.help-dialog h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+}
+
+.help-dialog dt {
+  margin-top: 0.9rem;
+  font-weight: 700;
+}
+
+.help-dialog dd {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+}
+
+.help-dialog form {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
 #run-form > p,
 #run-form > div,
 #run-form > section,

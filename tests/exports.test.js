@@ -106,7 +106,7 @@ test('export controls enable after reporting, preserve graph on failure and disc
  w.SitemapCsvImport={importFile:async()=>({ok:true})};w.SitemapGraph={buildGraph:()=>graph};
  let finish,downloads=0;
  w.SitemapExports={...api,png:()=>new Promise(resolve=>finish=resolve),download:()=>downloads++};
- w.eval(fs.readFileSync('js/run-controls.js','utf8'));
+ w.eval(fs.readFileSync('js/run-controls.js','utf8'));f.elements.mode.value='csv-import';f.elements.mode.onchange();
  Object.defineProperty(f.elements.inputFile,'files',{value:[{name:'links.csv'}]});
  f.elements.rootUrl.value='https://example.test/';
  const button=w.document.getElementById('export-png'), output=w.document.getElementById('export-status');
@@ -115,6 +115,7 @@ test('export controls enable after reporting, preserve graph on failure and disc
  const pending=button.onclick();assert.equal(button.disabled,true);
  w.document.getElementById('reset-run').click();finish(new w.Blob(['old']));await pending;
  assert.equal(downloads,0);assert.equal(button.disabled,true);assert.match(output.textContent,/Complete an analysis/);
+ f.elements.mode.value='csv-import';f.elements.mode.onchange();
  await f.onsubmit({preventDefault(){}});
  w.SitemapExports.png=async()=>{throw Error('encoder');};
  await button.onclick();assert.match(output.textContent,/Export failed/);assert.equal(f.graph,graph);

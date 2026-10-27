@@ -38,7 +38,7 @@ test('controller reports failures, empty imports, partial runs, cancellation and
   w.SitemapContracts=contracts;w.SitemapOutcomes=outcomes;
   let imported={ok:true}, included=graph();
   w.SitemapCsvImport={importFile:async()=>imported};w.SitemapGraph={buildGraph:()=>included};
-  w.eval(fs.readFileSync('js/run-controls.js','utf8'));
+  w.eval(fs.readFileSync('js/run-controls.js','utf8'));f.elements.mode.value='csv-import';f.elements.mode.onchange();
   Object.defineProperty(f.elements.inputFile,'files',{value:[{name:'links.csv'}]});
   const submit=()=>f.onsubmit({preventDefault(){}});
   await submit();assert.equal(f.report.outcome,'user-supplied');
