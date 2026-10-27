@@ -19,6 +19,7 @@
   <script src="js/outcome-report.js" defer></script>
   <script src="js/metrics.js" defer></script>
   <script src="js/exports.js" defer></script>
+  <script src="js/enhanced-import.js" defer></script>
   <script src="js/run-controls.js" defer></script>
 </head>
 <body>
@@ -33,9 +34,16 @@
   </header>
 
   <form id="run-form" aria-label="Analyze sitemap data">
-<label>Input mode <select name="mode"><option value="csv-import">Links CSV — asserted hyperlinks</option><option value="xml-import">Sitemap XML — inventory only</option><option value="html-import">Saved HTML — links observed in file</option><option value="live-cors">Live discovery — readable HTML and sitemaps</option><option disabled>Iframe bridge — no compatible provider</option><option disabled>JSONP — no approved provider</option><option disabled>Paste — not implemented</option></select></label>
-<label>Local file <input name="inputFile" type="file" required></label>
-<label>Root URL (required for live discovery or saved HTML) <input name="rootUrl" type="url" placeholder="https://example.org/"></label>
+<label>Input mode <select name="mode"><option value="csv-import">Links CSV — asserted hyperlinks</option><option value="xml-import">Sitemap XML — inventory only</option><option value="html-import">Saved HTML — links observed in file</option><option value="live-cors">Live discovery — readable HTML and sitemaps</option><option disabled>Iframe bridge — no compatible provider</option><option disabled>JSONP — no approved provider</option><option value="paste-import">Paste — explicit HTML, XML or CSV</option></select></label>
+<label data-file-option>Local files (first XML is the entry point) <input name="inputFile" type="file" multiple required></label>
+<div id="source-mappings" data-file-option></div>
+<div data-paste-option hidden>
+<label>Paste content kind <select name="pasteKind"><option value="html">HTML</option><option value="xml">Sitemap XML</option><option value="csv">Links CSV</option></select></label>
+<label>Pasted content (up to 2 MB UTF-8) <textarea name="pasteText" rows="7" maxlength="2000000"></textarea></label>
+<label>Paste source URL (required for HTML; optional sitemap identity for XML) <input name="pasteSourceUrl" type="url" placeholder="https://example.org/page"></label>
+</div>
+<p data-file-option>Each selected file has an explicit content kind; mixed HTML, XML and CSV are supported. Up to 128 selected files; 2 MB per file and 10 MB total. HTML needs a source URL per file. XML references resolve only through explicit URL mappings; unmapped files are never fetched. Paste and imports make no network requests.</p>
+<label>Root URL (required for live discovery; optional for local link depth) <input name="rootUrl" type="url" placeholder="https://example.org/"></label>
 <label data-live-option hidden>Request timeout (milliseconds) <input name="requestTimeoutMs" type="number" min="1" max="10000" value="10000" disabled></label>
 <label data-live-option hidden>Concurrent requests <input name="maxConcurrency" type="number" min="1" max="8" value="2" disabled></label>
 <label data-live-option hidden>Run duration (seconds) <input name="runDurationSeconds" type="number" min="1" max="300" value="30" disabled></label>
@@ -85,6 +93,9 @@
         <button id="export-links" type="button" disabled>Download links CSV</button>
         <p id="export-status" role="status" aria-live="polite">Complete an analysis to export. Downloads contain included URLs and evidence.</p>
       </div>
+
+      <label><input name="hierarchyPreview" type="checkbox" form="run-form"> Show inferred URL hierarchy preview</label>
+      <section id="hierarchy-preview" class="page-inspection" aria-label="Inferred URL hierarchy preview" hidden></section>
 
       <section id="graph-metrics" class="page-inspection" aria-label="Included graph metrics" hidden></section>
 

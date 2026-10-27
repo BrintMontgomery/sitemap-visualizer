@@ -4,8 +4,8 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 14 — complete; Phase 15 is next; Phases 1–14 are complete.
-* **Last green commit:** Phase 14 metrics and qualified orphan candidates; all 123 unit/integration/smoke tests and six Chromium file:// browser checks pass. See `docs/metrics.md` for definitions, bounds and verification.
+* **Current phase:** Phase 15 — complete; Phase 16 is next; Phases 1–15 are complete.
+* **Last green commit:** Phase 15 enhanced imports and hierarchy preview; all 132 unit/integration/smoke tests and seven Chromium file:// browser checks pass. See `docs/enhanced-imports.md` for bounds, semantics and verification.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
@@ -390,7 +390,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 15: Paste, multi-file and hierarchy preview
+## [x] Phase 15: Paste, multi-file and hierarchy preview
 *Improve imports without broadening network access. **Risk:** Medium — implicit local file resolution or hierarchy lines may be mistaken for observed links. **Thinking effort:** Medium (simple model). **Depends on:** 4–6, 7.*
 
 ### 1. Objectives & Scope
@@ -398,13 +398,16 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** only expressly selected files are read; hierarchy is labeled inference and does not affect link depth.
 
 ### 2. Implementation Checklist
-- [ ] Add bounded paste with explicit content kind/base URL, inert parsing and localized errors.
-- [ ] Map selected HTML files to source URLs and match sitemap index references only to selected local files.
-- [ ] Render hierarchy preview as a separate inferred relation, excluded from `LinkEdge`, degrees and observed BFS.
-- [ ] Add malformed/oversize/missing-reference and multi-file provenance fixtures.
+- [x] Add bounded paste with explicit content kind/base URL, inert parsing and localized errors.
+- [x] Map selected HTML files to source URLs and match sitemap index references only to selected local files.
+- [x] Render hierarchy preview as a separate inferred relation, excluded from `LinkEdge`, degrees and observed BFS.
+- [x] Add malformed/oversize/missing-reference and multi-file provenance fixtures.
 
 ### 3. Testing & Verification
 * **Checks:** AT-32–34; inspect no implicit local reads or network calls.
+- [x] All 132 unit/integration/smoke tests pass, including nine new enhanced-import regressions for explicit paste kinds, mixed provenance, selection/byte/record/time limits, missing mappings, inertness, cancellation, hierarchy isolation and reset/replacement.
+- [x] Chromium 133.0.6943.0 file:// enhanced imports and all six existing browser checks pass; zero import network attempts, observer positive control, 390px layout, source mapping, missing XML references and export/metric isolation verified. Narrow UI visually inspected.
+* **Decision:** Mixed selected HTML/XML/CSV uses explicit per-file kinds and source mappings; first XML is the entry point and only reachable mapped XML is read. Paste reuses existing validated import transports with a pasted-input reference. Preview uses nearest included path ancestors in a separate inferred list and never changes graph/export semantics. See `docs/enhanced-imports.md` for interfaces, limits, whole-batch cap behavior and browser evidence.
 * **Acceptance:** added input modes preserve identical graph semantics and offline capability.
 * **Commit point:** commit enhanced imports and tests.
 

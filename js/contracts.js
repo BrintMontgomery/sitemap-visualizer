@@ -13,7 +13,7 @@
     "xml-import": "XML import is not implemented yet.",
     "csv-import": "CSV import is not implemented yet.",
     "html-import": "HTML import is not implemented yet.",
-    "paste-import": "Paste import is not implemented yet."
+    "paste-import": "Bounded pasted HTML, sitemap XML or links CSV via local parsers."
   });
   var statuses = Object.freeze(["readable", "partial", "user-supplied", "not-readable", "not-supported"]);
   var evidenceClasses = Object.freeze(["observed-html", "imported-link", "sitemap-only", "bridge-reported", "jsonp-reported"]);

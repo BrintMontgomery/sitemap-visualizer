@@ -367,3 +367,10 @@ a {
 .graph-node.is-neighbor circle { stroke: #0369a1; stroke-width: 3; }
 #graph-metrics table { display: inline-table; width: auto; margin: 0 1.5rem 1rem 0; vertical-align: top; }
 #graph-metrics li { overflow-wrap: anywhere; }
+
+/* Enhanced local imports and a separate path-inference preview. */
+#run-form textarea { display: block; box-sizing: border-box; width: 100%; max-width: 100%; resize: vertical; }
+#run-form [data-paste-option] label { display: block; margin-block: .5rem; }
+#source-mappings label { display: block; margin-block: .5rem; }
+#source-mappings select, #source-mappings input { margin-inline-start: .5rem; }
+#hierarchy-preview { overflow-wrap: anywhere; }

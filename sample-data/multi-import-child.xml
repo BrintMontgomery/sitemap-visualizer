@@ -1,0 +1,6 @@
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://example.test/</loc></url>
+  <url><loc>https://example.test/guide</loc></url>
+  <url><loc>https://example.test/guide/page</loc></url>
+  <url><loc>https://example.test/inventory-only</loc></url>
+</urlset>

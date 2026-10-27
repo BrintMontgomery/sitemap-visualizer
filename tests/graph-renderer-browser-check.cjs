@@ -26,7 +26,9 @@ const root=path.resolve(__dirname,'..');
    await page.setInputFiles('[name=inputFile]',path.join(root,'sample-data',name));
    const start=performance.now();await page.click('[type=submit]');
    await page.waitForFunction(()=>['complete','partial'].includes(document.getElementById('run-status').dataset.state));
-   return performance.now()-start;
+   const elapsed=performance.now()-start;
+   await page.locator("#graph-canvas").scrollIntoViewIfNeeded();
+   return elapsed;
   }
   await load('radial-clusters-links.csv');
   assert.equal(await page.locator('.graph-node').count(),49);
