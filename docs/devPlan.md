@@ -458,7 +458,7 @@ Phase 18 (conditional allowlisted JSONP) was removed; the number is left unused 
 
 ---
 
-## [ ] Phase 19: Cross-browser and release gate
+## [x] Phase 19: Cross-browser and release gate
 *Prove the shipped capability set against the specification. **Risk:** High — a hosted Pages check can conceal a broken direct-file package. **Thinking effort:** High (advanced model). **Depends on:** all shipped phases.*
 
 ### 1. Objectives & Scope
