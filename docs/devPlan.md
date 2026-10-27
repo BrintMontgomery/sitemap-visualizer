@@ -4,9 +4,9 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 17 — complete by documented omission of the cooperative iframe bridge; Phase 18 is next; Phases 1–17 are complete.
+* **Current phase:** Phase 17 — complete by documented omission of the cooperative iframe bridge; Phase 19 is next; Phases 1–17 are complete. Phase 18 (allowlisted JSONP) was removed from the plan on 27 October 2026; see Deferred Items.
 * **Last green verification:** Phase 17 iframe bridge decision; all 138 unit/integration/smoke tests pass. No runtime changes; Phase 15's seven Chromium file:// browser checks remain the previous browser evidence. See `docs/iframe-bridge-decision.md` and `docs/xhr-decision.md` for scope and verification.
-* **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phase 17 recorded the bridge as unshipped P1; Phase 18 remains conditional. Neither blocks the P0 release.
+* **Open questions / blockers:** None for the P0 release. Phase 17 recorded the cooperative iframe bridge as unshipped P1, and the P2 JSONP provider is omitted without a phase. Neither blocks the P0 release.
 
 ## Why this plan
 The repository now displays a semantic static application shell from `index.html`, with local CSS, a deferred classic script, an empty state, and a development smoke suite. It does not yet import source data, build a graph, crawl permitted pages, or export results. The goal is a static package that opens under `file://` and gives a site analyst an honest map of what the browser or imported files actually establish. Live coverage is bounded by CORS and readable site policy; XML inventory alone cannot prove links or click depth.
@@ -49,8 +49,9 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 | 15 | Paste, multi-file, hierarchy preview | 4–6, 7 | Medium / simple model | Explicit enhanced imports |
 | 16 | Optional XHR adapter | 10, 12 | Medium / simple model | Equivalent bounded CORS behavior |
 | 17 | Conditional cooperative bridge | 2, 12 | Very High / advanced model | Verified public message transport if provider exists |
-| 18 | Conditional allowlisted JSONP | 2, 12 | Very High / advanced model | Disabled-default provider adapter if approved |
-| 19 | Cross-browser and release gate | 1–18 as shipped | High / advanced model | P0 traceability and release evidence |
+| 19 | Cross-browser and release gate | 1–17 as shipped | High / advanced model | P0 traceability and release evidence |
+
+Phase 18 (conditional allowlisted JSONP) was removed; the number is left unused so existing references to Phase 19 stay valid.
 
 **Primary requirement allocation** (the release matrix in Phase 19 records each individual requirement and its evidence):
 
@@ -73,8 +74,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 | 15 | FR-054–055, FR-058 | NFR-026 |
 | 16 | FR-045 | NFR-020, NFR-022 |
 | 17 | FR-048–050 | NFR-024 |
-| 18 | FR-051–052, FR-063 | NFR-025 |
-| 19 | All shipped functions | NFR-007–014, NFR-017–029 |
+| 19 | All shipped functions; FR-051–052 and FR-063 as omitted P2 | NFR-007–014, NFR-017–029 (NFR-025 as omitted P2) |
 
 ---
 
@@ -458,26 +458,6 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 18: Conditional allowlisted JSONP
-*Consider a publisher-supported inventory endpoint only after an explicit security decision. **Risk:** High — remote provider script executes in the application page. **Thinking effort:** Very High (advanced model). **Depends on:** 2, 12.*
-
-### 1. Objectives & Scope
-* **In scope:** P2, disabled by default; no generic URL-to-script adapter. Omit if no audited trusted provider exists.
-* **Done means:** an unapproved URL never loads as script; if shipped, a user deliberately opts into exactly the configured HTTPS provider.
-
-### 2. Implementation Checklist
-- [ ] Review a real provider, endpoint, callback parameter, schema and legal trust boundary; ship immutable allowlist config only after approval.
-- [ ] Require per-provider affirmative opt-in and visible code-execution warning.
-- [ ] Use unique callback, timeout, schema/budget checks and callback/script cleanup for every outcome.
-- [ ] Verify generic URL rejection, disabled mode and optional approved-provider behavior.
-
-### 3. Testing & Verification
-* **Checks:** AT-29 always; AT-30 only if shipped. Confirm no provider script in offline/default operation.
-* **Acceptance:** default remains disabled and omission does not block P0 release.
-* **Commit point:** commit adapter and threat note only if an approved endpoint exists.
-
----
-
 ## [ ] Phase 19: Cross-browser and release gate
 *Prove the shipped capability set against the specification. **Risk:** High — a hosted Pages check can conceal a broken direct-file package. **Thinking effort:** High (advanced model). **Depends on:** all shipped phases.*
 
@@ -486,14 +466,15 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** every P0 item is evidenced; every enabled P1/P2 mode passes its checks; the package imports, graphs, inspects and exports offline under `file://`.
 
 ### 2. Implementation Checklist
-- [ ] Map FR-001–065 and NFR-001–029 to tests/manual evidence and state unshipped conditional features plainly.
+- [ ] Map FR-001–065 and NFR-001–029 to tests/manual evidence and state unshipped conditional features plainly: the P1 iframe bridge (FR-048–050, NFR-024) and the omitted P2 JSONP provider (FR-051–052, FR-063, NFR-025).
 - [ ] Run AT-01–37 as applicable, including file launch in Chrome/Edge/Firefox, CORS allowed/denied fixtures, no-network imports/exports, keyboard use, caps, CSV injection and traffic inspection.
 - [ ] Record 50-page duration and 250-node/1,000-edge responsiveness against proposed targets; identify browser/device and exceptions.
 - [ ] Review bundled dependency versions, licenses, exact source/SRI if CDN enabled, export schema, threat model, and README CORS limits.
 - [ ] Verify no backend/proxy/telemetry, no remote script from imported data, and no false completeness or unrestricted-crawl claim.
+- [ ] Run AT-29: with the `jsonp-provider` mode disabled, a generic URL never loads as script, the disabled notice is shown, and offline/default operation loads no provider script. AT-30 is not applicable because JSONP is not shipped.
 
 ### 3. Testing & Verification
-* **Checks:** all P0 acceptance rows in §10, especially AT-16–19, AT-22–24, AT-35–37; AT-25–30 only for enabled optional modes.
+* **Checks:** all P0 acceptance rows in §10, especially AT-16–19, AT-22–24, AT-29, AT-35–37; AT-25–28 and AT-30 only for enabled optional modes (none are currently enabled).
 * **Acceptance:** clean local package passes required checks in all three desktop browsers with documented evidence and no P0 gap.
 * **Commit point:** commit only release docs/evidence/fixes needed to clear the gate.
 
@@ -501,7 +482,8 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ## Deferred Items And Explicit Non-Goals
 * **Out of scope:** backend, proxy, hosted crawler, browser extension, arbitrary cross-origin HTML access, authentication crawling, CAPTCHA bypass, cloud history/sharing, and unstated live coverage. The browser security boundary in Version 3.0 remains binding.
-* **Dependency-gated:** P1 iframe bridge requires an existing compatible target endpoint; P2 JSONP requires a real trusted JSONP provider and explicit approval. XHR ships only for a justified compatibility need. Disabled modes remain visible as unavailable where appropriate.
+* **Dependency-gated:** P1 iframe bridge requires an existing compatible target endpoint. XHR ships only for a justified compatibility need. Disabled modes remain visible as unavailable where appropriate.
+* **Removed:** Phase 18, conditional allowlisted JSONP (FR-051–052, FR-063, NFR-025), was removed from the plan on 27 October 2026 at the owner's request. The requirements make JSONP P2 and call omission the security-preferred default, so the release ships no JSONP adapter. The disabled `jsonp-provider` option stays visible as unavailable, and Phase 19 still runs AT-29. Reopening needs a real trusted provider, an explicit security approval, and a new phase.
 * **Chosen values:** default depth 2 and pages 50 come from FR-002. Proposed selectable ranges and final resource budgets must be fixed in `js/config.js` and tested before live discovery; do not silently turn proposed values into asserted product facts.
 * **Discovered along the way:** log out-of-scope findings here with a separate follow-up, without expanding a current phase.
   * 27 October 2026 (user request, outside phase scope): outcome reports listed a failed discovery's first issue twice; issues are now deduplicated by code, message and input reference (`tests/outcome-report.test.js`). Live discovery cannot read sites without CORS headers (FR-040, NFR-019); a development helper, `tools/same-origin-link-export.js`, runs on the target origin in the user's browser and exports a links CSV. The application does not load it, and its records remain `imported-link` assertions. See `docs/same-origin-export.md`.
