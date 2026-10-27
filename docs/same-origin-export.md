@@ -20,7 +20,9 @@ application never loads this file.
    browsers ask you to type `allow pasting` first.
 3. Wait for the summary line. A file named `<host>-links.csv` downloads.
 4. In the application choose **Links CSV**, select the file, set **Root URL**
-   to the same start page and run the analysis.
+   to the URL the summary line names and run the analysis. If the start page
+   redirected (for example `/` to `/default.aspx`), that is the redirect
+   target, not the address you opened.
 
 To change limits, run this before pasting:
 
@@ -50,6 +52,10 @@ window.SITEMAP_EXPORT_OPTIONS = { maxPages: 100, maxDepth: 3, delayMs: 1500 };
 - Pages are parsed with `DOMParser`, which is inert: scripts do not run and
   resources do not load. `<base href>` is honored. Fragments are removed.
 - Links found on pages at the depth limit are recorded but not followed.
+- Links are recorded under each page's final URL after redirects. The summary
+  reports the start page's final URL as `root`. Using the pre-redirect address
+  as the application's root leaves other depths unknown, because the CSV
+  records no link from it.
 - Robots restrictions are not consulted, as in live discovery. Keep the
   delay and limits modest on sites you do not operate.
 
@@ -63,12 +69,14 @@ visited.
 
 ## Verification
 
-`tests/same-origin-link-export.test.js` (5 tests, jsdom) covers breadth-first
+`tests/same-origin-link-export.test.js` (7 tests, jsdom) covers breadth-first
 order, depth and page limits, `credentials: "omit"`, inert parsing (an embedded
 script does not run), `<base href>`, fragment removal, off-site link and
 redirect handling, non-HTML and HTTP failures, option validation, foreign start
 URLs, the download path with blob release, and import of the exported CSV into
-a graph with the expected depths and `imported-link` evidence.
+a graph with the expected depths and `imported-link` evidence. Two later tests
+cover a redirected start page (the reported root yields full depths; the
+pre-redirect address reproduces all-unknown depths) and an unreadable start page.
 
 The helper was also run in Chromium against an intercepted fixture site with a
 session cookie set. Its four requests carried no cookie, and the downloaded CSV

@@ -33,7 +33,7 @@
 
   var start = normalize(settings.startUrl || location.href);
   if (!start || !sameOrigin(start)) throw new Error("Open the site being mapped and run this there; the start URL must share its origin.");
-  var queue = [{ url: start, depth: 0 }], queued = new Set([start]), links = new Set(), rows = [], failures = [], pages = 0;
+  var queue = [{ url: start, depth: 0 }], queued = new Set([start]), links = new Set(), rows = [], failures = [], pages = 0, root = null;
 
   while (queue.length && pages < settings.maxPages) {
     var job = queue.shift();
@@ -53,6 +53,8 @@
 
     // DOMParser output is inert: scripts do not run and resources do not load.
     var source = normalize(response.url || job.url), doc = new DOMParser().parseFromString(text, "text/html");
+    // Links are recorded under the final URL, so a redirected start page is the root.
+    if (job.depth === 0) root = source;
     var baseElement = doc.querySelector("base[href]"), base = (baseElement && normalize(baseElement.getAttribute("href"), source)) || source;
     doc.querySelectorAll("a[href], area[href]").forEach(function (anchor) {
       var target = normalize(anchor.getAttribute("href"), base);
@@ -64,9 +66,9 @@
   }
 
   var csv = "source,target\r\n" + rows.map(function (row) { return row.map(cell).join(","); }).join("\r\n") + (rows.length ? "\r\n" : "");
-  var summary = { start: start, pagesRequested: pages, links: rows.length, unvisited: queue.length, failures: failures.length, csv: csv };
+  var summary = { start: start, root: root, pagesRequested: pages, links: rows.length, unvisited: queue.length, failures: failures.length, csv: csv };
   if (failures.length) console.table(failures.map(function (f) { return { url: f[0], reason: f[1] }; }));
-  console.log("Sitemap export: " + pages + " pages requested, " + rows.length + " links, " + failures.length + " failures, " + queue.length + " queued but not visited. Set the app's root URL to " + start + " and import the CSV in Links CSV mode.");
+  console.log("Sitemap export: " + pages + " pages requested, " + rows.length + " links, " + failures.length + " failures, " + queue.length + " queued but not visited. " + (root ? "Set the app's root URL to " + root + (root !== start ? " (the start page redirected there)" : "") + " and import the CSV in Links CSV mode." : "The start page could not be read; no root is available."));
   if (settings.download) {
     var url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" })), link = document.createElement("a");
     link.href = url; link.download = location.hostname + "-links.csv";

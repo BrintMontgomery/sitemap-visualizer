@@ -106,3 +106,36 @@ test("exported CSV imports as asserted links with depth from the declared root",
   assert.equal(graph.edges.length, 7);
   assert.ok(graph.edges.every(e => e.evidence.every(v => v.evidenceClass === "imported-link")));
 });
+
+test("a redirected start page becomes the reported root, and depth propagates from it", async () => {
+  const dom = new JSDOM("<!doctype html><body></body>", { url: "https://site.test/", runScripts: "outside-only" });
+  const w = dom.window, pages = { "https://site.test/default.aspx": '<a href="/">Logo</a><a href="/a">A</a>', "https://site.test/a": '<a href="/">Logo</a>' };
+  const messages = [];
+  w.SITEMAP_EXPORT_OPTIONS = { delayMs: 250, download: false };
+  w.setTimeout = (fn, ms) => setTimeout(fn, ms === 250 ? 0 : ms);
+  w.console = { log: m => messages.push(m), table() {} };
+  w.fetch = async url => {
+    const final = url === "https://site.test/" ? "https://site.test/default.aspx" : url;
+    return { ok: final in pages, status: final in pages ? 200 : 404, url: final, headers: { get: () => "text/html" }, text: async () => pages[final] || "" };
+  };
+  const result = await w.eval(source);
+  w.close();
+  assert.equal(result.start, "https://site.test/");
+  assert.equal(result.root, "https://site.test/default.aspx");
+  assert.match(messages[0], /root URL to https:\/\/site\.test\/default\.aspx \(the start page redirected there\)/);
+  const csv = result.csv;
+  for (const [root, expected] of [["https://site.test/", { "https://site.test/": 0, "https://site.test/default.aspx": null, "https://site.test/a": null }], [result.root, { "https://site.test/default.aspx": 0, "https://site.test/": 1, "https://site.test/a": 1 }]]) {
+    const run = contracts.createRun({ mode: "csv-import", rootUrl: root, maxDepth: 4 });
+    const imported = await csvImport.importFile({ name: "links.csv", size: Buffer.byteLength(csv), text: async () => csv }, run);
+    const graph = graphApi.buildGraph(run, [imported]);
+    assert.deepEqual(Object.fromEntries(graph.nodes.map(n => [n.url, n.depth])), expected, root);
+  }
+});
+
+test("an unreadable start page reports no root", async () => {
+  const { w, run } = load({ startUrl: "https://site.test/missing" });
+  const result = await run();
+  assert.equal(result.root, null);
+  assert.equal(result.links, 0);
+  w.close();
+});
