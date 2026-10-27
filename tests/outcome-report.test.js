@@ -57,3 +57,10 @@ test('controller reports failures, empty imports, partial runs, cancellation and
   w.document.getElementById('reset-run').click();assert.equal(f.report,null);assert.equal(w.document.getElementById('outcome-report').hidden,true);
  } finally {w.close();}
 });
+test('a failed discovery reports each issue once, keeping distinct URLs and codes',()=>{
+ const root={code:'NETWORK_OR_POLICY_FAILURE',message:'Unreadable',inputReference:'https://example.org/'};
+ const map={...root,inputReference:'https://example.org/sitemap.xml'};
+ const report=outcomes.create({run:run('live-cors'),result:{ok:false,issue:{...root},issues:[root,map]},issue:{code:'TIMEOUT',message:'Unreadable',inputReference:'https://example.org/'}});
+ assert.deepEqual(report.issues.map(i=>[i.code,i.inputReference]),[['NETWORK_OR_POLICY_FAILURE','https://example.org/'],['NETWORK_OR_POLICY_FAILURE','https://example.org/sitemap.xml'],['TIMEOUT','https://example.org/']]);
+ assert.equal(report.state,'failed');assert.equal(report.outcome,'not-readable');
+});

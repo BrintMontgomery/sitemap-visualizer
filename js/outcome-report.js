@@ -12,7 +12,7 @@
     });
   }
   var guidance = {
-    NETWORK_OR_POLICY_FAILURE: "No readable response. Possible causes include CORS, network failure, browser permissions or site policy; the browser does not reveal which cause applies.",
+    NETWORK_OR_POLICY_FAILURE: "No readable response. Possible causes include CORS, network failure, browser permissions or site policy; the browser does not reveal which cause applies. If the site opens in this browser, tools/same-origin-link-export.js can export its links as a CSV for Links CSV import.",
     OPAQUE_RESPONSE: "An opaque response cannot establish page content or links. Browser CORS permission is required.",
     TIMEOUT: "The time budget expired. Retry with a permitted larger timeout or import local data.",
     CANCELLED: "Analysis was cancelled. Only included evidence is reported; unfinished discovery is discarded and unprocessed pages remain unknown.",
@@ -29,6 +29,9 @@
     var run = options.run || {}, result = options.result || {}, graph = options.graph, progress = result.progress || options.progress || {};
     var issues = (result.issues || []).concat(result.issue ? [result.issue] : [], graph ? graph.issues : [], options.issue ? [options.issue] : []);
     if (options.unsupported) issues.push({ code: "NOT_SUPPORTED", message: guidance.NOT_SUPPORTED });
+    // A failed discovery repeats its first issue as result.issue; report it once.
+    var seen = new Set();
+    issues = issues.filter(function (i) { var key = JSON.stringify([i.code, i.message, i.inputReference]); if (seen.has(key)) return false; seen.add(key); return true; });
     var codes = Array.from(new Set(issues.map(function (i) { return i.code; }).filter(Boolean)));
     var cancelled = options.state === "cancelled" || codes.includes("CANCELLED");
     var truncated = !!(result.truncated || (graph && graph.truncated) || codes.some(function (code) { return ["CANCELLED", "TIMEOUT", "SIZE_LIMIT", "PARTIAL_LIMIT"].includes(code); }));

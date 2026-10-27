@@ -504,6 +504,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Dependency-gated:** P1 iframe bridge requires an existing compatible target endpoint; P2 JSONP requires a real trusted JSONP provider and explicit approval. XHR ships only for a justified compatibility need. Disabled modes remain visible as unavailable where appropriate.
 * **Chosen values:** default depth 2 and pages 50 come from FR-002. Proposed selectable ranges and final resource budgets must be fixed in `js/config.js` and tested before live discovery; do not silently turn proposed values into asserted product facts.
 * **Discovered along the way:** log out-of-scope findings here with a separate follow-up, without expanding a current phase.
+  * 27 October 2026 (user request, outside phase scope): outcome reports listed a failed discovery's first issue twice; issues are now deduplicated by code, message and input reference (`tests/outcome-report.test.js`). Live discovery cannot read sites without CORS headers (FR-040, NFR-019); a development helper, `tools/same-origin-link-export.js`, runs on the target origin in the user's browser and exports a links CSV. The application does not load it, and its records remain `imported-link` assertions. See `docs/same-origin-export.md`.
 * **Plan maintenance:** if implementation deviates, record the decision, affected requirement IDs and verification in the same phase commit.
 
 ## Completion Checklist
