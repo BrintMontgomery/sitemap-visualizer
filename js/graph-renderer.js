@@ -48,6 +48,7 @@
   function create(container, graph, runId, onChange, onSelect) {
     var doc = container.ownerDocument, svg = container.querySelector("svg"), layer, disposed = false, listeners = [], selected = null, gesture = null;
     var positions = initialPositions(graph), nodes = new Map(), edges = [], view = { x: 0, y: 0, k: 1 }, state = new Map();
+    var highlight = "none", highlightControl = container.querySelector(".neighbor-highlight");
     var output = container.querySelector(".layout-status"), unpin = container.querySelector('[data-action="unpin"]');
     function el(tag, attrs, parent) { var e = doc.createElementNS(NS, tag); Object.entries(attrs || {}).forEach(function (a) { e.setAttribute(a[0], a[1]); }); if (parent) parent.appendChild(e); return e; }
     function listen(target, name, fn, options) { target.addEventListener(name, fn, options); listeners.push(function () { target.removeEventListener(name, fn, options); }); }
@@ -56,6 +57,13 @@
     function announce(message) { output.textContent = message; }
     function transform() { layer.setAttribute("transform", "translate(" + view.x + " " + view.y + ") scale(" + view.k + ")"); }
     function draw() {
+      var related = new Set();
+      edges.forEach(function (item) {
+        var active = selected !== null && ((["inbound", "both"].includes(highlight) && item.edge.target === selected) || (["outbound", "both"].includes(highlight) && item.edge.source === selected));
+        item.path.classList.toggle("is-highlighted", active);
+        if (active) { related.add(item.edge.source); related.add(item.edge.target); }
+      });
+      nodes.forEach(function (item, id) { item.group.classList.toggle("is-neighbor", id !== selected && related.has(id)); });
       nodes.forEach(function (item, id) { var p = state.get(id); item.group.setAttribute("transform", "translate(" + p.x + " " + p.y + ")"); item.group.classList.toggle("is-pinned", p.pinned); item.group.classList.toggle("is-selected", id === selected); item.group.setAttribute("aria-pressed", String(id === selected)); item.pin.textContent = p.pinned ? "Pinned" : ""; });
       edges.forEach(function (item) {
         var s = state.get(item.edge.source), t = state.get(item.edge.target), sr = radius(nodes.get(item.edge.source).node), tr = radius(nodes.get(item.edge.target).node);
@@ -176,6 +184,10 @@
         else if (action === "unpin" && selected) release(selected);
       });
     });
+    if (highlightControl) {
+      highlightControl.value = "none";
+      listen(highlightControl, "change", function () { highlight = highlightControl.value; draw(); announce("Link highlight: " + highlight + ". Applies to included links only."); });
+    }
     container.hidden = false; draw(); fit(); changed(); announce("Drag a node to pin it. Drag the canvas to pan; use the wheel or buttons to zoom.");
     return Object.freeze({ select: select, fit: fit, zoom: zoom, pin: pin, unpin: release, reset: reset, getLayoutState: snapshot,
       destroy: function () {

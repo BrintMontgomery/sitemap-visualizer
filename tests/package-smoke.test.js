@@ -18,7 +18,7 @@ test("the direct-file entry point uses local stylesheet and deferred classic scr
   const scriptTags = [...html.matchAll(/<script\b[^>]*src=["']([^"']+)["'][^>]*>/gi)];
 
   assert.equal(stylesheetTags.length, 1, "one local stylesheet should be loaded");
-  assert.equal(scriptTags.length, 13, "contracts, graph and renderer load before run controls");
+  assert.equal(scriptTags.length, 14, "contracts, graph and renderer load before run controls");
   assert.equal(scriptTags[0][1], "js/contracts.js");
   assert.equal(scriptTags[1][1], "js/csv-import.js"
   );
@@ -31,8 +31,9 @@ test("the direct-file entry point uses local stylesheet and deferred classic scr
   assert.equal(scriptTags[8][1], "js/page-details.js");
   assert.equal(scriptTags[9][1], "js/app.bundle.js");
   assert.equal(scriptTags[10][1], "js/outcome-report.js");
-  assert.equal(scriptTags[11][1], "js/exports.js");
-  assert.equal(scriptTags[12][1], "js/run-controls.js");
+  assert.equal(scriptTags[11][1], "js/metrics.js");
+  assert.equal(scriptTags[12][1], "js/exports.js");
+  assert.equal(scriptTags[13][1], "js/run-controls.js");
   assert.match(stylesheetTags[0][0], /href=["']css\/styles\.css["']/i);
   assert.match(scriptTags[0][0], /defer(?:\s|>)/i);
   assert.doesNotMatch(scriptTags[0][0], /type=["']module["']/i);

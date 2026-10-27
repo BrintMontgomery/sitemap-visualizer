@@ -5,7 +5,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
   // The graph is an immutable validated snapshot. This view never adds evidence.
-  function create(container, graph, renderer) {
+  function create(container, graph, renderer, metrics) {
     var doc = container.ownerDocument, selected = null, disposed = false, listeners = [];
     var nodes = new Map(graph.nodes.map(function (n) { return [n.id, n]; })), buttons = new Map();
     var body = container.querySelector("tbody"), panel = container.querySelector(".page-detail-content"), status = container.querySelector(".selection-status");
@@ -29,6 +29,11 @@
       var entries = [["URL", node.url], ["Title", node.title || "Unavailable"], ["Depth", depth(node)],
         ["HTTP status", node.httpStatus === null ? "Unknown (not recorded)" : String(node.httpStatus)],
         ["Fetched by this application", node.fetched ? "Yes" : "No"], ["Inbound links in included graph", String(node.inDegree)], ["Outbound links in included graph", String(node.outDegree)]];
+      if (metrics) {
+        var metric = metrics.pages.find(function (p) { return p.id === node.id; });
+        if (metric) entries = entries.concat([["Weak component", metric.componentId], ["Observed HTML inbound links", String(metric.observedInDegree)], ["Observed HTML outbound links", String(metric.observedOutDegree)], ["Candidate orphan (included corpus only)", metric.orphanCandidate ? "Yes — sitemap member with no observed HTML inbound links" : "No candidate identified (not proof of absence)"]]);
+        el("p", metrics.qualification, panel);
+      }
       entries.forEach(function (entry) { el("dt", entry[0], fields); el("dd", entry[1], fields); });
       // Defense in depth: an invalid URL must never become an actionable href.
       try {

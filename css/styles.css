@@ -361,3 +361,9 @@ a {
 #discovery-log li { overflow-wrap: anywhere; }
 
 #run-diagnostics { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
+
+/* Optional direction highlighting retains graph geometry and evidence. */
+.graph-edge.is-highlighted { stroke: #0369a1; stroke-width: 3; }
+.graph-node.is-neighbor circle { stroke: #0369a1; stroke-width: 3; }
+#graph-metrics table { display: inline-table; width: auto; margin: 0 1.5rem 1rem 0; vertical-align: top; }
+#graph-metrics li { overflow-wrap: anywhere; }

@@ -17,6 +17,7 @@
   <script src="js/page-details.js" defer></script>
   <script src="js/app.bundle.js" defer></script>
   <script src="js/outcome-report.js" defer></script>
+  <script src="js/metrics.js" defer></script>
   <script src="js/exports.js" defer></script>
   <script src="js/run-controls.js" defer></script>
 </head>
@@ -71,6 +72,7 @@
           <button type="button" data-action="reset" disabled>Reset layout</button>
           <button type="button" data-action="unpin" disabled>Unpin selected</button>
         </div>
+        <label>Highlight selected page links <select class="neighbor-highlight" aria-label="Highlight selected page links"><option value="none">Off</option><option value="inbound">Inbound</option><option value="outbound">Outbound</option><option value="both">Inbound and outbound</option></select></label>
         <a class="inspection-skip" href="#page-list-title">Skip graph to page list and details</a>
         <svg id="graph-canvas" viewBox="0 0 1000 700" role="group" aria-label="Directed sitemap graph" aria-describedby="graph-help"></svg>
         <p id="graph-help" class="graph-help">Arrows point to link targets. Drag nodes to pin; drag the canvas to pan. Double-click a node or use Unpin selected to release it. Gray dashed nodes have unknown depth. Tab to a node to inspect it, or use the page list below. Enter and Space also select a node.</p>
@@ -83,6 +85,8 @@
         <button id="export-links" type="button" disabled>Download links CSV</button>
         <p id="export-status" role="status" aria-live="polite">Complete an analysis to export. Downloads contain included URLs and evidence.</p>
       </div>
+
+      <section id="graph-metrics" class="page-inspection" aria-label="Included graph metrics" hidden></section>
 
       <div id="empty-state" class="empty-state" role="region" aria-labelledby="empty-state-title">
         <svg class="empty-state-icon" viewBox="0 0 80 64" aria-hidden="true" focusable="false">

@@ -4,7 +4,7 @@ After a complete or partial analysis with at least one included page, use Downlo
 
 ## PNG
 
-PNG is 1,000 pixels wide with a 700-pixel graph viewport and a variable-height white footer. It preserves the current pan/zoom, node positions, pins, selection, colors, arrows and labels. Content outside that viewport remains outside the exported view; use Fit to view first to include it. The footer contains the depth legend, run ID, start time, mode, outcome, state, partial/truncation flags, page/link/exclusion counts, effective limits and coverage/evidence qualifiers. Unknown depth is gray and dashed. A completed bounded attempt does not establish full-site coverage.
+PNG is 1,000 pixels wide with a 700-pixel graph viewport and a variable-height white footer. It preserves the current pan/zoom, node positions, pins, selection, colors, arrows and labels. Content outside that viewport remains outside the exported view; use Fit to view first to include it. The footer contains the depth legend, run ID, start time, mode, outcome, state, partial/truncation flags, page/link/exclusion counts, effective limits and coverage/evidence qualifiers. Phase 14 adds weak component counts, observed HTML link counts, candidate counts, depth distribution and the candidate qualification; current direction highlights are preserved. Unknown depth is gray and dashed. A completed bounded attempt does not establish full-site coverage.
 
 `SitemapExports.svgSnapshot(svg, graph, report)` clones the existing native renderer, retains transforms and internal marker references, and inlines a fixed set of presentation properties. It adds native SVG text and shapes for the footer, with no foreignObject, remote font, image or imported active markup. `png` rasterizes the local SVG Blob through Image and canvas to a PNG Blob. Decoder errors, missing canvas, encoding failure and a ten-second timeout reject with guidance. The intermediate SVG URL is revoked on success or failure.
 
@@ -24,6 +24,8 @@ Every row begins with these shared columns:
 | coverage | Scope and source qualifier, including no full-site proof |
 | limits_json | Effective page, depth, duration, concurrency and byte/record limits; request timeout when applicable |
 | exclusions_json | Counts of excluded records by reason (not necessarily unique pages) |
+| metrics_json | Included page/link/observed-HTML-link/component/candidate counts, degree/depth distributions and candidate qualification (see `metrics.md`) |
+| duration_ms, failed_requests | Run duration and failed request count, matching the outcome report |
 
 Pages CSV appends:
 
@@ -37,6 +39,10 @@ Pages CSV appends:
 | evidence_classes_json | Distinct graph evidence classes, including `sitemap-only` inventory |
 | evidence_json | Acquisition IDs, transport, input reference, evidence class, coverage status and available row/anchor/source references |
 | memberships_json | Independent sitemap memberships, source sitemap, lastmod and evidence; never hyperlinks |
+| component_id | Deterministic weak component identifier scoped to this included graph |
+| observed_html_in_degree, observed_html_out_degree | Distinct included links carrying observed HTML evidence, including saved HTML; CSV assertions excluded |
+| sitemap_member | Independent sitemap membership exists |
+| orphan_candidate | Sitemap member, zero observed HTML inbound links and not the selected root; qualified candidate only |
 
 Links CSV appends:
 
@@ -72,3 +78,5 @@ Development-only browser invocation:
 ```sh
 NODE_PATH="$CODEX_PRIMARY_RUNTIME_NODE_MODULES" CHROMIUM_EXECUTABLE_PATH=/path/to/chromium node tests/exports-browser-check.cjs
 ```
+
+Phase 14 verification: all 123 unit/integration/smoke tests pass. Metrics match CSV fields through Python CSV parsing; the Chromium export check passes with metrics in the PNG footer and CSV metadata. The updated PNG footer was visually inspected. CSV consumers should read headers by name; Phase 14 adds shared and per-page columns.

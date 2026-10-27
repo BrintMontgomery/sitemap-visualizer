@@ -32,14 +32,17 @@
     document.getElementById("discovery-log").hidden = true;
     document.querySelector("#discovery-log ol").textContent = "";
     document.getElementById("outcome-report").hidden = true; form.report = null;
-    form.graph = null; syncExports(); form.layoutState = null; form.attempt = null; form.discovery = null;
+    form.graph = null; form.metrics = null;
+    document.getElementById("graph-metrics").replaceChildren(); document.getElementById("graph-metrics").hidden = true;
+    syncExports(); form.layoutState = null; form.attempt = null; form.discovery = null;
     document.getElementById("empty-state").hidden = false;
     document.getElementById("graph-count").textContent = "Awaiting input";
   }
   function showGraph(graph, id) {
+    if (typeof SitemapMetrics !== "undefined") form.metrics = SitemapMetrics.analyze(graph);
     if (graph.nodes.length && typeof SitemapRenderer !== "undefined") {
       renderer = SitemapRenderer.create(document.getElementById("graph-view"), graph, id, function (state) { form.layoutState = state; }, function (id) { if (details) details.select(id); });
-      if (typeof SitemapDetails !== "undefined") details = SitemapDetails.create(document.getElementById("page-inspection"), graph, renderer);
+      if (typeof SitemapDetails !== "undefined") details = SitemapDetails.create(document.getElementById("page-inspection"), graph, renderer, form.metrics);
       document.getElementById("empty-state").hidden = true;
     }
     document.getElementById("graph-count").textContent = graph.nodes.length + " pages · " + graph.edges.length + " links";
@@ -55,7 +58,12 @@
   }
   function report(active, result, graph, state, issue) {
     var data = SitemapOutcomes.create({ id: active.id, run: active.run, mode: active.mode, input: active.input, startedAt: active.startedAt, durationMs: Date.now() - active.started, requestTimeoutMs: active.timeout, result: result, graph: graph, state: state, issue: issue, progress: form.discovery && (form.discovery.progress || form.discovery), unsupported: active.unsupported });
-    form.report = data; syncExports();
+    form.report = data;
+    if (graph && typeof SitemapMetrics !== "undefined") {
+      form.metrics = form.metrics || SitemapMetrics.analyze(graph);
+      SitemapMetrics.render(document.getElementById("graph-metrics"), form.metrics, data);
+    }
+    syncExports();
     summary.textContent = "Run " + data.runId + " | " + data.mode + " | " + data.input + " | Root: " + (data.root || "unknown") + " | " + data.startedAt + " | Limits: " + data.limits.pages + " pages, depth " + data.limits.depth + ", " + data.limits.durationMs + " ms | Duration: " + data.durationMs + " ms | Included: " + data.counts.pages + " pages, " + data.counts.links + " links | Exclusions: " + data.counts.exclusions + " | Truncated: " + data.truncated + " | " + data.coverage;
     document.getElementById("outcome-report").hidden = false;
     document.getElementById("outcome-guidance").textContent = data.guidance;

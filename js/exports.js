@@ -1,13 +1,13 @@
 (function (root, factory) {
   "use strict";
-  if (typeof module === "object" && module.exports) module.exports = factory();
-  else root.SitemapExports = factory();
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  if (typeof module === "object" && module.exports) module.exports = factory(require("./metrics.js"));
+  else root.SitemapExports = factory(root.SitemapMetrics);
+})(typeof globalThis !== "undefined" ? globalThis : this, function (metricsApi) {
   "use strict";
   var NS = "http://www.w3.org/2000/svg";
-  var metadata = ["record_type", "run_id", "started_at", "mode", "outcome", "state", "partial", "truncated", "coverage", "limits_json", "exclusions_json"];
+  var metadata = ["record_type", "run_id", "started_at", "mode", "outcome", "state", "partial", "truncated", "coverage", "limits_json", "exclusions_json", "metrics_json", "duration_ms", "failed_requests"];
   var schemas = Object.freeze({
-    pages: Object.freeze(metadata.concat(["page_id", "url", "title", "depth", "in_degree", "out_degree", "fetched", "http_status", "evidence_classes_json", "evidence_json", "memberships_json"])),
+    pages: Object.freeze(metadata.concat(["page_id", "url", "title", "depth", "in_degree", "out_degree", "fetched", "http_status", "evidence_classes_json", "evidence_json", "memberships_json", "component_id", "observed_html_in_degree", "observed_html_out_degree", "sitemap_member", "orphan_candidate"])),
     links: Object.freeze(metadata.concat(["link_id", "source_id", "target_id", "source_depth", "target_depth", "evidence_classes_json", "evidence_json"]))
   });
   function cell(value) {
@@ -22,15 +22,17 @@
   }
   function available(graph, report) { return !!(graph && graph.nodes.length && report && ["complete", "partial"].includes(report.state)); }
   function requireData(graph, report) { if (!available(graph, report)) throw Error("Complete an analysis with included pages before exporting."); }
-  function common(graph, report) {
-    return ["data", report.runId, report.startedAt, report.mode, report.outcome, report.state, !!(graph.partial || report.state === "partial" || report.truncated), !!report.truncated, report.coverage, JSON.stringify(report.limits), JSON.stringify(report.exclusionsByReason)];
+  function common(graph, report, metrics) {
+    return ["data", report.runId, report.startedAt, report.mode, report.outcome, report.state, !!(graph.partial || report.state === "partial" || report.truncated), !!report.truncated, report.coverage, JSON.stringify(report.limits), JSON.stringify(report.exclusionsByReason), JSON.stringify(metricsApi.summary(metrics || metricsApi.analyze(graph))), report.durationMs, report.counts.failedRequests];
   }
   function csv(kind, graph, report) {
     requireData(graph, report);
     if (!schemas[kind]) throw Error("Unknown export kind.");
-    var base = common(graph, report), rows = [schemas[kind]], depths = new Map(graph.nodes.map(function (n) { return [n.id, n.depth]; }));
+    var metrics = metricsApi.analyze(graph), byId = new Map(metrics.pages.map(function (p) { return [p.id, p]; }));
+    var base = common(graph, report, metrics), rows = [schemas[kind]], depths = new Map(graph.nodes.map(function (n) { return [n.id, n.depth]; }));
     graph[kind === "pages" ? "nodes" : "edges"].forEach(function (record) {
       var fields = kind === "pages" ? [record.id, record.url, record.title, record.depth, record.inDegree, record.outDegree, record.fetched, record.httpStatus, JSON.stringify(record.evidenceClasses), JSON.stringify(record.evidence), JSON.stringify(graph.memberships.filter(function (m) { return m.url === record.url; }))] : [record.id, record.source, record.target, depths.get(record.source), depths.get(record.target), JSON.stringify(Array.from(new Set(record.evidence.map(function (e) { return e.evidenceClass; }))).sort()), JSON.stringify(record.evidence)];
+      if (kind === "pages") { var p = byId.get(record.id); fields = fields.concat([p.componentId, p.observedInDegree, p.observedOutDegree, p.sitemapMember, p.orphanCandidate]); }
       rows.push(base.concat(fields));
     });
     if (rows.length === 1) { var empty = base.slice(); empty[0] = "metadata"; rows.push(empty.concat(schemas[kind].slice(base.length).map(function () { return ""; }))); }
@@ -66,10 +68,13 @@
     var legend = [["#f59e0b", "Root / 0"], ["#22c55e", "Depth 1"], ["#8b5cf6", "Depth 2"], ["#ef4444", "Depth 3+"], ["#cbd5e1", "Unknown depth"]];
     legend.forEach(function (entry, i) { element("circle", { cx: 28 + i * 190, cy: y - 5, r: "7", fill: entry[0], stroke: "#334155", "stroke-dasharray": i === 4 ? "3 2" : "none" }); element("text", { x: 42 + i * 190, y: y, fill: "#1e293b", "font-family": "sans-serif", "font-size": "14" }, entry[1]); });
     y += 30;
+    var metrics = metricsApi.analyze(graph);
     var lines = ["Sitemap | Run " + report.runId + " | " + report.startedAt,
-      report.mode + " | " + report.outcome + " | " + report.state + " | Partial: " + common(graph, report)[6] + " | Truncated: " + report.truncated,
+      report.mode + " | " + report.outcome + " | " + report.state + " | Partial: " + common(graph, report, metrics)[6] + " | Truncated: " + report.truncated,
       graph.nodes.length + " pages | " + graph.edges.length + " links | Exclusions: " + report.counts.exclusions + " | Current viewport (pan/zoom and pins retained).",
-      "Limits: " + JSON.stringify(report.limits), report.coverage,
+      "Metrics: " + metrics.componentCount + " weak components | " + metrics.observedEdgeCount + " observed HTML links | " + metrics.candidateCount + " candidate orphans.",
+      "Depth distribution: " + metrics.depthDistribution.map(function (bin) { return (bin.value === null ? "Unknown" : bin.value) + "=" + bin.count; }).join(", "),
+      metrics.qualification, "Limits: " + JSON.stringify(report.limits), report.coverage,
       "Edges: observed-html = extracted HTML; imported-link = supplied assertion. XML membership is inventory only; unknown depth is not zero."];
     lines.forEach(function (text) {
       var current = "";

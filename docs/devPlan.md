@@ -4,8 +4,8 @@ Deliver an offline-capable sitemap graph from local inputs and browser-permitted
 **Source:** `docs/Sitemap_Visualizer_Requirements_v3.0.md` (Version 3.0, 26 October 2026). This plan follows the supplied `template_phasePlan.md`. Phase work changes implementation files only when that phase begins.
 
 ## Status
-* **Current phase:** Phase 13 — complete; Phase 14 is next; Phases 1–13 are complete.
-* **Last green commit:** Phase 13 PNG and CSV exports; all 115 unit/integration/smoke tests and five Chromium file:// browser checks pass. See `docs/exports.md` for schemas, export safety and evidence.
+* **Current phase:** Phase 14 — complete; Phase 15 is next; Phases 1–14 are complete.
+* **Last green commit:** Phase 14 metrics and qualified orphan candidates; all 123 unit/integration/smoke tests and six Chromium file:// browser checks pass. See `docs/metrics.md` for definitions, bounds and verification.
 * **Open questions / blockers:** An actual cooperative iframe bridge and an approved JSONP provider are not identified. Phases 17–18 remain conditional; they do not block the P0 release.
 
 ## Why this plan
@@ -368,7 +368,7 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 
 ---
 
-## [ ] Phase 14: Metrics and orphan candidates
+## [x] Phase 14: Metrics and orphan candidates
 *Add analysis only where evidence supports it. **Risk:** Medium — missing links may be labeled as proven orphan pages. **Thinking effort:** Medium (simple model). **Depends on:** 6, 12.*
 
 ### 1. Objectives & Scope
@@ -376,12 +376,15 @@ Build the reliable offline path before live acquisition. All modes feed one vali
 * **Done means:** sitemap-only nodes with no observed incoming edge are candidates, with incompleteness clearly stated.
 
 ### 2. Implementation Checklist
-- [ ] Compute components and summary counts over included nodes and real graph edges.
-- [ ] Flag candidates only when an independent discovery source exists; never claim global orphan proof.
-- [ ] Expose optional inbound/outbound highlights and metrics alongside coverage warnings.
+- [x] Compute components and summary counts over included nodes and real graph edges.
+- [x] Flag candidates only when an independent discovery source exists; never claim global orphan proof.
+- [x] Expose optional inbound/outbound highlights and metrics alongside coverage warnings.
 
 ### 3. Testing & Verification
 * **Checks:** AT-11 and AT-34; complete versus bounded/blocked fixtures.
+- [x] All 123 unit/integration/smoke tests pass, including eight metric regressions for evidence distinctions, components, degrees, unknown depth, candidate qualification, bounds/failures, exports, highlights and replacement/reset isolation.
+- [x] Chromium 133.0.6943.0 file:// metrics and existing five browser checks pass; inventory-only candidates, capped coverage, keyboard selection, directional highlights and offline exports verified with zero remote requests. Metrics UI and updated PNG visually inspected.
+* **Decision:** Components are weakly connected over included explicit links; degree distributions include supplied assertions while observed HTML degrees count only HTML evidence. Independent sitemap membership gates candidates; exclude the selected root and require zero observed HTML inbound links. CSV and PNG retain qualification. No URL hierarchy inference is added (FR-058 preview remains Phase 15). See `docs/metrics.md`.
 * **Acceptance:** displayed/exported metrics agree with graph records and candidates are qualified.
 * **Commit point:** commit metrics and tests.
 
